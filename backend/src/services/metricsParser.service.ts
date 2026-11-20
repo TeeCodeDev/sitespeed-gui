@@ -110,6 +110,107 @@ function extractCoachAdvice(coach: JsonRecord | null): CoachAdviceItem[] {
   return items.sort((a, b) => a.score - b.score).slice(0, 40);
 }
 
+interface ContentTypeBreakdown {
+  type: string;
+  transferSizeBytes: number;
+  requests: number;
+}
+
+interface HeavyAsset {
+  url: string;
+  type: string;
+  transferSizeBytes: number;
+}
+
+interface RunDetails {
+  categoryScores: {
+    performance: number | null;
+    bestpractice: number | null;
+    accessibility: number | null;
+    privacy: number | null;
+  };
+  milestones: {
+    firstVisualChangeMs: number | null;
+    domContentLoadedMs: number | null;
+    visualComplete85Ms: number | null;
+    lastVisualChangeMs: number | null;
+  };
+  contentTypes: ContentTypeBreakdown[];
+  heaviestAssets: HeavyAsset[];
+}
+
+function extractRunDetails(bt: JsonRecord | null, px: JsonRecord | null, coach: JsonRecord | null): RunDetails {
+  const adviceRoot =
+    (coach?.advice && typeof coach.advice === 'object' ? (coach.advice as JsonRecord) : null) ?? coach;
+
+  const getScore = (cat: string) =>
+    getNestedNumber(adviceRoot, [cat, 'score', 'median']) ??
+    getNestedNumber(adviceRoot, [cat, 'score']);
+
+  const contentTypes: ContentTypeBreakdown[] = [];
+  const ctRoot =
+    (px?.contentTypes && typeof px.contentTypes === 'object' ? (px.contentTypes as JsonRecord) : null) ??
+    (px?.statistics && typeof (px.statistics as JsonRecord).contentTypes === 'object'
+      ? ((px.statistics as JsonRecord).contentTypes as JsonRecord)
+      : null);
+
+  if (ctRoot) {
+    for (const [type, val] of Object.entries(ctRoot)) {
+      if (!val || typeof val !== 'object') continue;
+      const obj = val as JsonRecord;
+      const bytes =
+        getNestedNumber(obj, ['transferSize', 'median']) ??
+        (typeof obj.transferSize === 'number' ? obj.transferSize : 0);
+      const reqs =
+        getNestedNumber(obj, ['requests', 'median']) ??
+        (typeof obj.requests === 'number' ? obj.requests : 0);
+      if (bytes > 0 || reqs > 0) {
+        contentTypes.push({ type, transferSizeBytes: Math.round(bytes), requests: Math.round(reqs) });
+      }
+    }
+    contentTypes.sort((a, b) => b.transferSizeBytes - a.transferSizeBytes);
+  }
+
+  const heaviestAssets: HeavyAsset[] = [];
+  const assetsArr = Array.isArray(px?.assets) ? px.assets : [];
+  for (const raw of assetsArr) {
+    if (!raw || typeof raw !== 'object') continue;
+    const item = raw as JsonRecord;
+    const url = typeof item.url === 'string' ? item.url : '';
+    const type = typeof item.type === 'string' ? item.type : 'other';
+    const bytes = typeof item.transferSize === 'number' ? item.transferSize : 0;
+    if (url && bytes > 0) {
+      heaviestAssets.push({ url, type, transferSizeBytes: Math.round(bytes) });
+    }
+  }
+  heaviestAssets.sort((a, b) => b.transferSizeBytes - a.transferSizeBytes);
+
+  return {
+    categoryScores: {
+      performance: getScore('performance'),
+      bestpractice: getScore('bestpractice'),
+      accessibility: getScore('accessibility'),
+      privacy: getScore('privacy'),
+    },
+    milestones: {
+      firstVisualChangeMs:
+        getNestedNumber(bt, ['visualMetrics', 'FirstVisualChange', 'median']) ??
+        getNestedNumber(bt, ['statistics', 'visualMetrics', 'FirstVisualChange', 'median']),
+      domContentLoadedMs:
+        getNestedNumber(bt, ['timings', 'pageTimings', 'domContentLoadedTime', 'median']) ??
+        getNestedNumber(bt, ['statistics', 'timings', 'pageTimings', 'domContentLoadedTime', 'median']),
+      visualComplete85Ms:
+        getNestedNumber(bt, ['visualMetrics', 'VisualComplete85', 'median']) ??
+        getNestedNumber(bt, ['statistics', 'visualMetrics', 'VisualComplete85', 'median']),
+      lastVisualChangeMs:
+        getNestedNumber(bt, ['visualMetrics', 'LastVisualChange', 'median']) ??
+        getNestedNumber(bt, ['statistics', 'visualMetrics', 'LastVisualChange', 'median']),
+    },
+    contentTypes,
+    heaviestAssets: heaviestAssets.slice(0, 10),
+  };
+}
+
 /**
  * Extracts Core Web Vitals, Browsertime timings, PageXray size/requests, and Coach score
  * from a completed Sitespeed.io output directory.
@@ -200,6 +301,7 @@ export async function parseSitespeedResults(
     (typeof coach?.score === 'number' ? coach.score : null);
 
   const adviceItems = extractCoachAdvice(coach);
+  const details = extractRunDetails(bt, px, coach);
 
   return {
     runId,
@@ -217,5 +319,6 @@ export async function parseSitespeedResults(
     videoRelPath: videoFile ? path.relative(runDir, videoFile).replace(/\\/g, '/') : null,
     harRelPath: harFile ? path.relative(runDir, harFile).replace(/\\/g, '/') : null,
     adviceJson: adviceItems.length > 0 ? JSON.stringify(adviceItems) : null,
+    detailsJson: JSON.stringify(details),
   };
 }

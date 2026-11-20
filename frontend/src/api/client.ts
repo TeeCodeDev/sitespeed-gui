@@ -51,6 +51,7 @@ export interface TestRun {
   video_rel_path: string | null;
   har_rel_path: string | null;
   advice_json: string | null;
+  details_json: string | null;
 }
 
 export interface Schedule {

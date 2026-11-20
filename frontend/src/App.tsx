@@ -6,13 +6,19 @@ import { DashboardPage } from './pages/DashboardPage';
 import { SchedulesPage } from './pages/SchedulesPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { SharedReportPage } from './pages/SharedReportPage';
+import { StandaloneReportPage } from './pages/StandaloneReportPage';
 
 type Tab = 'dashboard' | 'clients' | 'schedules' | 'settings';
 
 export function App() {
-  const shareToken = new URLSearchParams(window.location.search).get('share');
+  const params = new URLSearchParams(window.location.search);
+  const shareToken = params.get('share');
   if (shareToken) {
     return <SharedReportPage token={shareToken} />;
+  }
+  const reportId = Number(params.get('report'));
+  if (Number.isInteger(reportId) && reportId > 0) {
+    return <StandaloneReportPage runId={reportId} />;
   }
 
   return <MainApp />;

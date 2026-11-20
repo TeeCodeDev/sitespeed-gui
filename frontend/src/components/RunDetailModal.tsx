@@ -65,6 +65,15 @@ export function RunDetailModal({ run: initialRun, onClose }: RunDetailModalProps
             <p className="text-xs text-slate-500">{run.url}</p>
           </div>
           <div className="flex items-center gap-2">
+            <a
+              href={`/?report=${run.id}`}
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-indigo-700"
+            >
+              <ExternalLink className="h-4 w-4" />
+              Open Whitelabel in Browser
+            </a>
             {harUrl && (
               <a
                 href={harUrl}
