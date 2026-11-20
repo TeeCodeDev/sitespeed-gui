@@ -56,7 +56,10 @@ export async function registerRunRoutes(app: FastifyInstance): Promise<void> {
 
     if (
       run.status === 'completed' &&
-      (!run.advice_json || !run.details_json || !run.details_json.includes('"domains"') || run.lcp_ms === null)
+      (!run.advice_json ||
+        !run.details_json ||
+        !run.details_json.includes('"allAssets"') ||
+        run.lcp_ms === null)
     ) {
       const parsed = await parseSitespeedResults(run.id, run.url, getRunHostDir(run.id)).catch(
         () => null

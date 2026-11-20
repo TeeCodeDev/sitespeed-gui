@@ -68,8 +68,16 @@ interface CoachAdviceItem {
 
 function extractCoachAdvice(coach: JsonRecord | null): CoachAdviceItem[] {
   if (!coach) return [];
+  const inner =
+    (coach.coach && typeof coach.coach === 'object' ? (coach.coach as JsonRecord) : null) ?? coach;
+  const pageSummary =
+    (inner.pageSummary && typeof inner.pageSummary === 'object'
+      ? (inner.pageSummary as JsonRecord)
+      : null) ?? inner;
   const adviceRoot =
-    (coach.advice && typeof coach.advice === 'object' ? (coach.advice as JsonRecord) : null) ?? coach;
+    (pageSummary.advice && typeof pageSummary.advice === 'object'
+      ? (pageSummary.advice as JsonRecord)
+      : null) ?? pageSummary;
 
   const categories: Array<'performance' | 'bestpractice' | 'accessibility' | 'privacy'> = [
     'performance',
@@ -119,7 +127,19 @@ interface ContentTypeBreakdown {
 interface HeavyAsset {
   url: string;
   type: string;
+  status?: number | null;
   transferSizeBytes: number;
+  contentSizeBytes?: number | null;
+  expires?: string | null;
+}
+
+interface StatRow {
+  label: string;
+  min: number | null;
+  median: number | null;
+  p90: number | null;
+  max: number | null;
+  unit: string;
 }
 
 interface DomainBreakdown {
@@ -141,8 +161,10 @@ interface RunDetails {
     visualComplete85Ms: number | null;
     lastVisualChangeMs: number | null;
   };
+  detailedStats: StatRow[];
   contentTypes: ContentTypeBreakdown[];
   heaviestAssets: HeavyAsset[];
+  allAssets: HeavyAsset[];
   domains: DomainBreakdown[];
   firstPartyBytes: number | null;
   firstPartyRequests: number | null;
@@ -190,7 +212,7 @@ function extractRunDetails(
   }
 
   const assetSource = pxPage ?? pxSummary;
-  const heaviestAssets: HeavyAsset[] = [];
+  const allAssets: HeavyAsset[] = [];
   const assetsArr = Array.isArray(assetSource?.assets) ? assetSource.assets : [];
   for (const raw of assetsArr) {
     if (!raw || typeof raw !== 'object') continue;
@@ -198,11 +220,88 @@ function extractRunDetails(
     const url = typeof item.url === 'string' ? item.url : '';
     const type = typeof item.type === 'string' ? item.type : 'other';
     const bytes = typeof item.transferSize === 'number' ? item.transferSize : 0;
-    if (url && bytes > 0) {
-      heaviestAssets.push({ url, type, transferSizeBytes: Math.round(bytes) });
+    const contentBytes = typeof item.contentSize === 'number' ? Math.round(item.contentSize) : null;
+    const status = typeof item.status === 'number' ? item.status : null;
+    const expires = typeof item.expires === 'string' ? item.expires : null;
+    if (url) {
+      allAssets.push({
+        url,
+        type,
+        status,
+        transferSizeBytes: Math.round(bytes),
+        contentSizeBytes: contentBytes,
+        expires,
+      });
     }
   }
-  heaviestAssets.sort((a, b) => b.transferSizeBytes - a.transferSizeBytes);
+  allAssets.sort((a, b) => b.transferSizeBytes - a.transferSizeBytes);
+  const heaviestAssets = allAssets.slice(0, 15);
+
+  const extractStat = (label: string, paths: string[][], unit = 'ms'): StatRow | null => {
+    for (const p of paths) {
+      const median = getNestedNumber(bt, [...p, 'median']);
+      if (median !== null) {
+        return {
+          label,
+          min: getNestedNumber(bt, [...p, 'min']),
+          median,
+          p90: getNestedNumber(bt, [...p, 'p90']),
+          max: getNestedNumber(bt, [...p, 'max']),
+          unit,
+        };
+      }
+    }
+    return null;
+  };
+
+  const detailedStats: StatRow[] = [
+    extractStat('Largest Contentful Paint (LCP)', [
+      ['googleWebVitals', 'largestContentfulPaint'],
+      ['timings', 'largestContentfulPaint', 'renderTime'],
+      ['statistics', 'googleWebVitals', 'largestContentfulPaint'],
+    ]),
+    extractStat('First Contentful Paint (FCP)', [
+      ['googleWebVitals', 'firstContentfulPaint'],
+      ['timings', 'paintTiming', 'first-contentful-paint'],
+      ['statistics', 'googleWebVitals', 'firstContentfulPaint'],
+    ]),
+    extractStat('Cumulative Layout Shift (CLS)', [
+      ['googleWebVitals', 'cumulativeLayoutShift'],
+      ['pageinfo', 'cumulativeLayoutShift'],
+    ], ''),
+    extractStat('Total Blocking Time (TBT)', [
+      ['googleWebVitals', 'totalBlockingTime'],
+      ['cpu', 'longTasks', 'totalBlockingTime'],
+    ]),
+    extractStat('Time to First Byte (TTFB)', [
+      ['googleWebVitals', 'ttfb'],
+      ['timings', 'ttfb'],
+    ]),
+    extractStat('Speed Index', [
+      ['visualMetrics', 'SpeedIndex'],
+      ['statistics', 'visualMetrics', 'SpeedIndex'],
+    ]),
+    extractStat('First Visual Change', [
+      ['visualMetrics', 'FirstVisualChange'],
+      ['statistics', 'visualMetrics', 'FirstVisualChange'],
+    ]),
+    extractStat('Visual Complete 85%', [
+      ['visualMetrics', 'VisualComplete85'],
+      ['statistics', 'visualMetrics', 'VisualComplete85'],
+    ]),
+    extractStat('Last Visual Change', [
+      ['visualMetrics', 'LastVisualChange'],
+      ['statistics', 'visualMetrics', 'LastVisualChange'],
+    ]),
+    extractStat('DOM Content Loaded', [
+      ['timings', 'pageTimings', 'domContentLoadedTime'],
+      ['statistics', 'timings', 'pageTimings', 'domContentLoadedTime'],
+    ]),
+    extractStat('Fully Loaded', [
+      ['timings', 'fullyLoaded'],
+      ['statistics', 'timings', 'fullyLoaded'],
+    ]),
+  ].filter((s): s is StatRow => s !== null);
 
   const domains: DomainBreakdown[] = [];
   const domainsRoot =
@@ -258,9 +357,11 @@ function extractRunDetails(
         getNestedNumber(bt, ['visualMetrics', 'LastVisualChange', 'median']) ??
         getNestedNumber(bt, ['statistics', 'visualMetrics', 'LastVisualChange', 'median']),
     },
+    detailedStats,
     contentTypes,
-    heaviestAssets: heaviestAssets.slice(0, 15),
-    domains: domains.slice(0, 15),
+    heaviestAssets,
+    allAssets: allAssets.slice(0, 250),
+    domains: domains.slice(0, 25),
     firstPartyBytes:
       getNestedNumber(px, ['firstParty', 'transferSize', 'median']) ??
       getNestedNumber(assetSource, ['firstParty', 'transferSize']),
