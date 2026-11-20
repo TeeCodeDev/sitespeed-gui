@@ -1,5 +1,6 @@
-import { ExternalLink, FileDown, X } from 'lucide-react';
-import type { TestRun } from '../api/client';
+import { useEffect, useState } from 'react';
+import { ExternalLink, FileDown, Terminal, X } from 'lucide-react';
+import { api, type TestRun } from '../api/client';
 
 interface RunDetailModalProps {
   run: TestRun;
@@ -18,6 +19,31 @@ function MetricBox({ label, value, unit }: { label: string; value: number | null
 }
 
 export function RunDetailModal({ run, onClose }: RunDetailModalProps) {
+  const [logs, setLogs] = useState<string>('');
+
+  useEffect(() => {
+    let active = true;
+    const fetchLogs = () => {
+      api
+        .getRunLogs(run.id)
+        .then((res) => {
+          if (active) setLogs(res.logs);
+        })
+        .catch(() => undefined);
+    };
+    fetchLogs();
+    if (run.status === 'running' || run.status === 'queued') {
+      const timer = setInterval(fetchLogs, 2000);
+      return () => {
+        active = false;
+        clearInterval(timer);
+      };
+    }
+    return () => {
+      active = false;
+    };
+  }, [run.id, run.status]);
+
   const isCompleted = run.status === 'completed';
   const reportUrl = isCompleted && run.report_dir ? `/reports/${run.report_dir}/index.html` : null;
   const videoUrl =
@@ -126,6 +152,16 @@ export function RunDetailModal({ run, onClose }: RunDetailModalProps) {
               />
             </div>
           )}
+
+          <div>
+            <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-200">
+              <Terminal className="h-4 w-4 text-sky-400" />
+              Runner Logs {run.status === 'running' ? '(live)' : ''}
+            </h3>
+            <pre className="max-h-64 overflow-auto rounded-lg border border-slate-800 bg-slate-950 p-3 font-mono text-xs text-slate-300 whitespace-pre-wrap">
+              {logs || 'Nog geen logregels beschikbaar...'}
+            </pre>
+          </div>
         </div>
       </div>
     </div>

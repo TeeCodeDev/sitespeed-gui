@@ -132,6 +132,7 @@ export const api = {
   }) => request<{ run: TestRun }>('/api/runs', { method: 'POST', body: JSON.stringify(body) }),
   cancelRun: (id: number) => request<{ ok: boolean }>(`/api/runs/${id}/cancel`, { method: 'POST' }),
   deleteRun: (id: number) => request<{ ok: boolean }>(`/api/runs/${id}`, { method: 'DELETE' }),
+  getRunLogs: (id: number) => request<{ logs: string }>(`/api/runs/${id}/logs`),
 
   getSchedules: () => request<{ schedules: Schedule[] }>('/api/schedules'),
   createSchedule: (body: {

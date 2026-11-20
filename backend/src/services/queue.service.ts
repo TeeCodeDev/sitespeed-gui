@@ -51,7 +51,7 @@ class RunQueueService {
       await fs.mkdir(hostDir, { recursive: true });
       runsDal.markRunning(run.id, null, reportRelDir);
 
-      const execResult = await executeSitespeedContainer(run, (containerId) => {
+      const execResult = await executeSitespeedContainer(run, hostDir, (containerId) => {
         runsDal.updateContainerId(run.id, containerId);
       });
 

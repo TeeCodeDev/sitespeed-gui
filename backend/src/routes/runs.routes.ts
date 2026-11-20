@@ -1,4 +1,5 @@
 import fs from 'node:fs/promises';
+import path from 'node:path';
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { getConfig } from '../config/env.js';
@@ -52,6 +53,23 @@ export async function registerRunRoutes(app: FastifyInstance): Promise<void> {
     const run = runsDal.getWithMetricsById(id);
     if (!run) return reply.code(404).send({ error: 'Run not found' });
     return { run };
+  });
+
+  app.get('/api/runs/:id/logs', async (req, reply) => {
+    const id = Number((req.params as { id: string }).id);
+    if (!Number.isInteger(id) || id <= 0) {
+      return reply.code(400).send({ error: 'Invalid run ID' });
+    }
+    const run = runsDal.getById(id);
+    if (!run) return reply.code(404).send({ error: 'Run not found' });
+
+    const logPath = path.join(getRunHostDir(id), 'runner.log');
+    try {
+      const logs = await fs.readFile(logPath, 'utf-8');
+      return { logs: logs.slice(-50_000) };
+    } catch {
+      return { logs: '' };
+    }
   });
 
   app.post('/api/runs', async (req, reply) => {
