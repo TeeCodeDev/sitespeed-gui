@@ -122,6 +122,12 @@ interface HeavyAsset {
   transferSizeBytes: number;
 }
 
+interface DomainBreakdown {
+  domain: string;
+  transferSizeBytes: number;
+  requests: number;
+}
+
 interface RunDetails {
   categoryScores: {
     performance: number | null;
@@ -137,9 +143,20 @@ interface RunDetails {
   };
   contentTypes: ContentTypeBreakdown[];
   heaviestAssets: HeavyAsset[];
+  domains: DomainBreakdown[];
+  firstPartyBytes: number | null;
+  firstPartyRequests: number | null;
+  thirdPartyBytes: number | null;
+  thirdPartyRequests: number | null;
+  responseCodes: Record<string, number>;
 }
 
-function extractRunDetails(bt: JsonRecord | null, px: JsonRecord | null, coach: JsonRecord | null): RunDetails {
+function extractRunDetails(
+  bt: JsonRecord | null,
+  pxSummary: JsonRecord | null,
+  pxPage: JsonRecord | null,
+  coach: JsonRecord | null
+): RunDetails {
   const adviceRoot =
     (coach?.advice && typeof coach.advice === 'object' ? (coach.advice as JsonRecord) : null) ?? coach;
 
@@ -147,6 +164,7 @@ function extractRunDetails(bt: JsonRecord | null, px: JsonRecord | null, coach: 
     getNestedNumber(adviceRoot, [cat, 'score', 'median']) ??
     getNestedNumber(adviceRoot, [cat, 'score']);
 
+  const px = pxSummary ?? pxPage;
   const contentTypes: ContentTypeBreakdown[] = [];
   const ctRoot =
     (px?.contentTypes && typeof px.contentTypes === 'object' ? (px.contentTypes as JsonRecord) : null) ??
@@ -171,8 +189,9 @@ function extractRunDetails(bt: JsonRecord | null, px: JsonRecord | null, coach: 
     contentTypes.sort((a, b) => b.transferSizeBytes - a.transferSizeBytes);
   }
 
+  const assetSource = pxPage ?? pxSummary;
   const heaviestAssets: HeavyAsset[] = [];
-  const assetsArr = Array.isArray(px?.assets) ? px.assets : [];
+  const assetsArr = Array.isArray(assetSource?.assets) ? assetSource.assets : [];
   for (const raw of assetsArr) {
     if (!raw || typeof raw !== 'object') continue;
     const item = raw as JsonRecord;
@@ -184,6 +203,39 @@ function extractRunDetails(bt: JsonRecord | null, px: JsonRecord | null, coach: 
     }
   }
   heaviestAssets.sort((a, b) => b.transferSizeBytes - a.transferSizeBytes);
+
+  const domains: DomainBreakdown[] = [];
+  const domainsRoot =
+    assetSource?.domains && typeof assetSource.domains === 'object'
+      ? (assetSource.domains as JsonRecord)
+      : null;
+  if (domainsRoot) {
+    for (const [domain, val] of Object.entries(domainsRoot)) {
+      if (!val || typeof val !== 'object') continue;
+      const obj = val as JsonRecord;
+      const bytes =
+        getNestedNumber(obj, ['transferSize', 'median']) ??
+        (typeof obj.transferSize === 'number' ? obj.transferSize : 0);
+      const reqs =
+        getNestedNumber(obj, ['requests', 'median']) ??
+        (typeof obj.requests === 'number' ? obj.requests : 0);
+      domains.push({ domain, transferSizeBytes: Math.round(bytes), requests: Math.round(reqs) });
+    }
+    domains.sort((a, b) => b.transferSizeBytes - a.transferSizeBytes);
+  }
+
+  const responseCodes: Record<string, number> = {};
+  const codesRoot =
+    (px?.responseCodes && typeof px.responseCodes === 'object' ? (px.responseCodes as JsonRecord) : null) ??
+    (assetSource?.responseCodes && typeof assetSource.responseCodes === 'object'
+      ? (assetSource.responseCodes as JsonRecord)
+      : null);
+  if (codesRoot) {
+    for (const [code, val] of Object.entries(codesRoot)) {
+      const n = getNestedNumber(codesRoot, [code, 'median']) ?? (typeof val === 'number' ? val : null);
+      if (n !== null && n > 0) responseCodes[code] = Math.round(n);
+    }
+  }
 
   return {
     categoryScores: {
@@ -207,7 +259,21 @@ function extractRunDetails(bt: JsonRecord | null, px: JsonRecord | null, coach: 
         getNestedNumber(bt, ['statistics', 'visualMetrics', 'LastVisualChange', 'median']),
     },
     contentTypes,
-    heaviestAssets: heaviestAssets.slice(0, 10),
+    heaviestAssets: heaviestAssets.slice(0, 15),
+    domains: domains.slice(0, 15),
+    firstPartyBytes:
+      getNestedNumber(px, ['firstParty', 'transferSize', 'median']) ??
+      getNestedNumber(assetSource, ['firstParty', 'transferSize']),
+    firstPartyRequests:
+      getNestedNumber(px, ['firstParty', 'requests', 'median']) ??
+      getNestedNumber(assetSource, ['firstParty', 'requests']),
+    thirdPartyBytes:
+      getNestedNumber(px, ['thirdParty', 'transferSize', 'median']) ??
+      getNestedNumber(assetSource, ['thirdParty', 'transferSize']),
+    thirdPartyRequests:
+      getNestedNumber(px, ['thirdParty', 'requests', 'median']) ??
+      getNestedNumber(assetSource, ['thirdParty', 'requests']),
+    responseCodes,
   };
 }
 
@@ -227,20 +293,22 @@ export async function parseSitespeedResults(
     files.find((f) => f.endsWith('browsertime.pageSummary.json')) ??
     files.find((f) => path.basename(f) === 'browsertime.json');
 
-  const pagexrayFile =
-    files.find((f) => f.endsWith('pagexray.summary-total.json')) ??
-    files.find((f) => f.endsWith('pagexray.pageSummary.json'));
+  const pagexraySummaryFile = files.find((f) => f.endsWith('pagexray.summary-total.json'));
+  const pagexrayPageFile = files.find((f) => f.endsWith('pagexray.pageSummary.json'));
 
-  const coachFile =
-    files.find((f) => f.endsWith('coach.summary-total.json')) ??
-    files.find((f) => f.endsWith('coach.pageSummary.json'));
+  const coachPageFile = files.find((f) => f.endsWith('coach.pageSummary.json'));
+  const coachSummaryFile = files.find((f) => f.endsWith('coach.summary-total.json'));
 
   const videoFile = files.find((f) => f.endsWith('.mp4'));
   const harFile = files.find((f) => f.endsWith('.har') || f.endsWith('.har.gz'));
 
   const bt = browsertimeFile ? await readJsonSafe(browsertimeFile) : null;
-  const px = pagexrayFile ? await readJsonSafe(pagexrayFile) : null;
-  const coach = coachFile ? await readJsonSafe(coachFile) : null;
+  const pxSummary = pagexraySummaryFile ? await readJsonSafe(pagexraySummaryFile) : null;
+  const pxPage = pagexrayPageFile ? await readJsonSafe(pagexrayPageFile) : null;
+  const px = pxSummary ?? pxPage;
+  const coach =
+    (coachPageFile ? await readJsonSafe(coachPageFile) : null) ??
+    (coachSummaryFile ? await readJsonSafe(coachSummaryFile) : null);
 
   const fcpMs =
     getNestedNumber(bt, ['googleWebVitals', 'firstContentfulPaint', 'median']) ??
@@ -301,7 +369,7 @@ export async function parseSitespeedResults(
     (typeof coach?.score === 'number' ? coach.score : null);
 
   const adviceItems = extractCoachAdvice(coach);
-  const details = extractRunDetails(bt, px, coach);
+  const details = extractRunDetails(bt, pxSummary, pxPage, coach);
 
   return {
     runId,

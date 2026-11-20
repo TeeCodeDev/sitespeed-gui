@@ -31,6 +31,12 @@ interface RunDetails {
   };
   contentTypes: Array<{ type: string; transferSizeBytes: number; requests: number }>;
   heaviestAssets: Array<{ url: string; type: string; transferSizeBytes: number }>;
+  domains?: Array<{ domain: string; transferSizeBytes: number; requests: number }>;
+  firstPartyBytes?: number | null;
+  firstPartyRequests?: number | null;
+  thirdPartyBytes?: number | null;
+  thirdPartyRequests?: number | null;
+  responseCodes?: Record<string, number>;
 }
 
 type Grade = 'good' | 'warn' | 'poor' | 'na';
@@ -428,7 +434,7 @@ export function WhitelabelReport({ run }: { run: TestRun }) {
         </div>
       )}
 
-      {/* Top 10 Heaviest Assets */}
+      {/* Top 15 Heaviest Assets */}
       {details && details.heaviestAssets.length > 0 && (
         <div className="print-card rounded-xl border border-slate-200 bg-white p-5 shadow-xs">
           <h4 className="mb-3 text-sm font-semibold text-slate-800">{t.heavyTitle}</h4>
@@ -454,6 +460,75 @@ export function WhitelabelReport({ run }: { run: TestRun }) {
               </tbody>
             </table>
           </div>
+        </div>
+      )}
+
+      {/* Domains & First/Third-party + Status Codes */}
+      {details && ((details.domains && details.domains.length > 0) || (details.responseCodes && Object.keys(details.responseCodes).length > 0)) && (
+        <div className="print-card rounded-xl border border-slate-200 bg-white p-5 shadow-xs space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h4 className="text-sm font-semibold text-slate-800">
+              {lang === 'nl' ? 'Domeinen & Externe Scripts' : 'Domains & Third-Party Requests'}
+            </h4>
+            <div className="flex flex-wrap gap-3 text-xs text-slate-600">
+              {details.firstPartyBytes != null && (
+                <span>
+                  1st-party:{' '}
+                  <strong className="font-mono text-slate-900">
+                    {Math.round(details.firstPartyBytes / 1024)} KB ({details.firstPartyRequests ?? 0} req)
+                  </strong>
+                </span>
+              )}
+              {details.thirdPartyBytes != null && (
+                <span>
+                  3rd-party:{' '}
+                  <strong className="font-mono text-slate-900">
+                    {Math.round(details.thirdPartyBytes / 1024)} KB ({details.thirdPartyRequests ?? 0} req)
+                  </strong>
+                </span>
+              )}
+              {details.responseCodes &&
+                Object.entries(details.responseCodes).map(([code, count]) => (
+                  <span
+                    key={code}
+                    className={`rounded px-2 py-0.5 font-mono text-[11px] font-semibold ${
+                      code.startsWith('2')
+                        ? 'bg-emerald-50 text-emerald-700'
+                        : code.startsWith('3')
+                          ? 'bg-amber-50 text-amber-700'
+                          : 'bg-rose-50 text-rose-700'
+                    }`}
+                  >
+                    HTTP {code}: {count}
+                  </span>
+                ))}
+            </div>
+          </div>
+
+          {details.domains && details.domains.length > 0 && (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="border-b border-slate-200 text-slate-500">
+                  <tr>
+                    <th className="py-2 font-semibold">{lang === 'nl' ? 'Domein' : 'Domain'}</th>
+                    <th className="py-2 text-right font-semibold">{t.sizeCol}</th>
+                    <th className="py-2 text-right font-semibold">{t.reqCol}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {details.domains.map((d) => (
+                    <tr key={d.domain}>
+                      <td className="py-2 font-mono text-[11px] text-slate-800">{d.domain}</td>
+                      <td className="py-2 text-right font-mono text-slate-700">
+                        {Math.round(d.transferSizeBytes / 1024)} KB
+                      </td>
+                      <td className="py-2 text-right font-mono text-slate-600">{d.requests}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
 

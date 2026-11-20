@@ -54,7 +54,10 @@ export async function registerRunRoutes(app: FastifyInstance): Promise<void> {
     let run = runsDal.getWithMetricsById(id);
     if (!run) return reply.code(404).send({ error: 'Run not found' });
 
-    if (run.status === 'completed' && (!run.advice_json || !run.details_json || run.lcp_ms === null)) {
+    if (
+      run.status === 'completed' &&
+      (!run.advice_json || !run.details_json || !run.details_json.includes('"domains"') || run.lcp_ms === null)
+    ) {
       const parsed = await parseSitespeedResults(run.id, run.url, getRunHostDir(run.id)).catch(
         () => null
       );
