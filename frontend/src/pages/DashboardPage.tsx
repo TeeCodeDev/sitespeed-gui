@@ -5,6 +5,7 @@ import {
   Plus,
   Printer,
   RefreshCw,
+  RotateCw,
   Share2,
   Trash2,
   XCircle,
@@ -38,6 +39,47 @@ export function DashboardPage({ clients, projects, runs, onRefresh }: DashboardP
   const [showNewTest, setShowNewTest] = useState(false);
   const [activeRun, setActiveRun] = useState<TestRun | null>(null);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+
+  const handleRerun = async (run: TestRun) => {
+    setActionError(null);
+    try {
+      const tags = JSON.parse(run.tags || '[]') as string[];
+      await api.createRun({
+        clientId: run.client_id,
+        projectId: run.project_id,
+        url: run.url,
+        browser: run.browser,
+        connectivity: run.connectivity,
+        iterations: run.iterations,
+        mobile: run.mobile === 1,
+        tags,
+      });
+      onRefresh();
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Opnieuw starten mislukt');
+    }
+  };
+
+  const handleCancelRun = async (id: number) => {
+    setActionError(null);
+    try {
+      await api.cancelRun(id);
+      onRefresh();
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Annuleren mislukt');
+    }
+  };
+
+  const handleDeleteRun = async (id: number) => {
+    setActionError(null);
+    try {
+      await api.deleteRun(id);
+      onRefresh();
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Verwijderen mislukt');
+    }
+  };
 
   const allTags = useMemo(() => {
     const set = new Set<string>();
@@ -182,6 +224,15 @@ export function DashboardPage({ clients, projects, runs, onRefresh }: DashboardP
           </button>
         </div>
       </div>
+
+      {actionError && (
+        <div className="no-print flex items-center justify-between rounded-lg border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-300">
+          <span>{actionError}</span>
+          <button onClick={() => setActionError(null)} className="text-xs underline">
+            Sluiten
+          </button>
+        </div>
+      )}
 
       {shareUrl && (
         <div className="no-print flex items-center justify-between rounded-lg border border-emerald-500/40 bg-emerald-500/10 p-3 text-sm text-emerald-200">
@@ -332,6 +383,13 @@ export function DashboardPage({ clients, projects, runs, onRefresh }: DashboardP
                     <td className="no-print px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-1.5">
                         <button
+                          onClick={() => handleRerun(run)}
+                          title="Opnieuw meten (1 klik)"
+                          className="rounded p-1.5 text-emerald-400 hover:bg-slate-800"
+                        >
+                          <RotateCw className="h-4 w-4" />
+                        </button>
+                        <button
                           onClick={() => setActiveRun(run)}
                           title="Bekijk rapport & video"
                           className="rounded p-1.5 text-sky-400 hover:bg-slate-800"
@@ -340,7 +398,7 @@ export function DashboardPage({ clients, projects, runs, onRefresh }: DashboardP
                         </button>
                         {(run.status === 'queued' || run.status === 'running') && (
                           <button
-                            onClick={() => api.cancelRun(run.id).then(onRefresh)}
+                            onClick={() => handleCancelRun(run.id)}
                             title="Annuleren"
                             className="rounded p-1.5 text-amber-400 hover:bg-slate-800"
                           >
@@ -349,7 +407,7 @@ export function DashboardPage({ clients, projects, runs, onRefresh }: DashboardP
                         )}
                         {run.status !== 'running' && (
                           <button
-                            onClick={() => api.deleteRun(run.id).then(onRefresh)}
+                            onClick={() => handleDeleteRun(run.id)}
                             title="Verwijderen"
                             className="rounded p-1.5 text-red-400 hover:bg-slate-800"
                           >
@@ -372,6 +430,7 @@ export function DashboardPage({ clients, projects, runs, onRefresh }: DashboardP
           projects={projects}
           onClose={() => setShowNewTest(false)}
           onCreated={onRefresh}
+          onClientCreated={onRefresh}
         />
       )}
 

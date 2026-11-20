@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X } from 'lucide-react';
+import { UserPlus, X } from 'lucide-react';
 import { api, type BrowserType, type Client, type ConnectivityType, type Project } from '../api/client';
 
 interface NewTestModalProps {
@@ -7,9 +7,16 @@ interface NewTestModalProps {
   projects: Project[];
   onClose: () => void;
   onCreated: () => void;
+  onClientCreated: (client: Client) => void;
 }
 
-export function NewTestModal({ clients, projects, onClose, onCreated }: NewTestModalProps) {
+export function NewTestModal({
+  clients,
+  projects,
+  onClose,
+  onCreated,
+  onClientCreated,
+}: NewTestModalProps) {
   const [clientId, setClientId] = useState<number>(clients[0]?.id ?? 0);
   const [projectId, setProjectId] = useState<string>('');
   const [url, setUrl] = useState('');
@@ -20,6 +27,9 @@ export function NewTestModal({ clients, projects, onClose, onCreated }: NewTestM
   const [tagsText, setTagsText] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [showAddClient, setShowAddClient] = useState(clients.length === 0);
+  const [newClientName, setNewClientName] = useState('');
+  const [creatingClient, setCreatingClient] = useState(false);
 
   const clientProjects = projects.filter((p) => p.client_id === clientId);
 
@@ -69,6 +79,24 @@ export function NewTestModal({ clients, projects, onClose, onCreated }: NewTestM
     }
   };
 
+  const handleCreateClient = async () => {
+    if (!newClientName.trim()) return;
+    setError(null);
+    setCreatingClient(true);
+    try {
+      const res = await api.createClient({ name: newClientName.trim() });
+      onClientCreated(res.client);
+      setClientId(res.client.id);
+      setProjectId('');
+      setNewClientName('');
+      setShowAddClient(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Klant aanmaken mislukt');
+    } finally {
+      setCreatingClient(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
       <div className="w-full max-w-lg rounded-xl border border-slate-800 bg-slate-900 p-6 shadow-2xl">
@@ -88,7 +116,17 @@ export function NewTestModal({ clients, projects, onClose, onCreated }: NewTestM
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-300">Klant *</label>
+              <div className="mb-1 flex items-center justify-between">
+                <label className="block text-xs font-medium text-slate-300">Klant *</label>
+                <button
+                  type="button"
+                  onClick={() => setShowAddClient((v) => !v)}
+                  className="flex items-center gap-1 text-[11px] font-medium text-sky-400 hover:text-sky-300"
+                >
+                  <UserPlus className="h-3 w-3" />
+                  {showAddClient ? 'Sluiten' : 'Nieuwe klant'}
+                </button>
+              </div>
               <select
                 value={clientId}
                 onChange={(e) => {
@@ -97,6 +135,7 @@ export function NewTestModal({ clients, projects, onClose, onCreated }: NewTestM
                 }}
                 className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
               >
+                {clients.length === 0 && <option value={0}>-- Maak eerst een klant --</option>}
                 {clients.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.name}
@@ -120,6 +159,26 @@ export function NewTestModal({ clients, projects, onClose, onCreated }: NewTestM
               </select>
             </div>
           </div>
+
+          {showAddClient && (
+            <div className="flex gap-2 rounded-lg border border-slate-800 bg-slate-950/70 p-2.5">
+              <input
+                type="text"
+                placeholder="Nieuwe klantnaam (bijv. Acme B.V.)"
+                value={newClientName}
+                onChange={(e) => setNewClientName(e.target.value)}
+                className="flex-1 rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 text-sm text-white"
+              />
+              <button
+                type="button"
+                disabled={creatingClient || !newClientName.trim()}
+                onClick={handleCreateClient}
+                className="rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-slate-950 hover:bg-emerald-400 disabled:opacity-50"
+              >
+                {creatingClient ? '...' : 'Toevoegen'}
+              </button>
+            </div>
+          )}
 
           <div>
             <label className="mb-1 block text-xs font-medium text-slate-300">Te testen URL *</label>

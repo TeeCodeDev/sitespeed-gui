@@ -18,11 +18,16 @@ function MetricBox({ label, value, unit }: { label: string; value: number | null
 }
 
 export function RunDetailModal({ run, onClose }: RunDetailModalProps) {
-  const reportUrl = run.report_dir ? `/reports/${run.report_dir}/index.html` : null;
+  const isCompleted = run.status === 'completed';
+  const reportUrl = isCompleted && run.report_dir ? `/reports/${run.report_dir}/index.html` : null;
   const videoUrl =
-    run.report_dir && run.video_rel_path ? `/reports/${run.report_dir}/${run.video_rel_path}` : null;
+    isCompleted && run.report_dir && run.video_rel_path
+      ? `/reports/${run.report_dir}/${run.video_rel_path}`
+      : null;
   const harUrl =
-    run.report_dir && run.har_rel_path ? `/reports/${run.report_dir}/${run.har_rel_path}` : null;
+    isCompleted && run.report_dir && run.har_rel_path
+      ? `/reports/${run.report_dir}/${run.har_rel_path}`
+      : null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4">
@@ -63,6 +68,14 @@ export function RunDetailModal({ run, onClose }: RunDetailModalProps) {
         </div>
 
         <div className="flex-1 space-y-6 overflow-y-auto p-6">
+          {(run.status === 'queued' || run.status === 'running') && (
+            <div className="rounded-lg border border-sky-500/40 bg-sky-500/10 p-4 text-sm text-sky-200">
+              {run.status === 'queued'
+                ? 'Deze meting staat in de wachtrij en wordt binnenkort gestart...'
+                : 'De Sitespeed.io / Browsertime meting is nu bezig. Het rapport en de laadvideo verschijnen automatisch zodra de run is afgerond.'}
+            </div>
+          )}
+
           {run.error_message && (
             <div className="rounded-lg border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-300">
               {run.error_message}
