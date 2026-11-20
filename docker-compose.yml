@@ -3,9 +3,16 @@ services:
     image: ghcr.io/teecodedev/sitespeed-gui:latest
     container_name: sitespeed-gui
     restart: unless-stopped
-    ports:
-      - "${PORT:-3000}:3000"
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
     environment:
+      - TZ=Europe/Amsterdam
       - PORT=3000
       - HOST=0.0.0.0
       - NODE_ENV=production
@@ -28,9 +35,15 @@ services:
       - sitespeed_db:/data/db
       - sitespeed_results:/data/results
       - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - pangolin_frontend
 
 volumes:
   sitespeed_db:
     name: sitespeed_db
   sitespeed_results:
     name: sitespeed_results
+
+networks:
+  pangolin_frontend:
+    external: true

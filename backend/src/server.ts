@@ -21,6 +21,7 @@ export async function buildApp() {
 
   const app = Fastify({
     logger: { level: cfg.LOG_LEVEL },
+    trustProxy: true,
   });
 
   await app.register(cors, {
