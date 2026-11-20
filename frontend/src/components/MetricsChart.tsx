@@ -33,36 +33,37 @@ export function MetricsChart({ runs }: MetricsChartProps) {
 
   if (completed.length === 0) {
     return (
-      <div className="print-card flex h-64 items-center justify-center rounded-xl border border-slate-800 bg-slate-900/60 text-sm text-slate-400">
+      <div className="print-card flex h-56 items-center justify-center rounded-lg border border-zinc-800 bg-zinc-900/40 text-sm text-zinc-500">
         Nog geen voltooide metingen met timing-metrics om weer te geven.
       </div>
     );
   }
 
   return (
-    <div className="print-card rounded-xl border border-slate-800 bg-slate-900/60 p-4">
-      <h3 className="mb-3 text-sm font-semibold text-slate-200">
-        Historische Snelheidstrend (ms — lager is beter)
+    <div className="print-card rounded-lg border border-zinc-800 bg-zinc-900/40 p-4">
+      <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-400">
+        Snelheidstrend (ms — lager is beter)
       </h3>
-      <div className="h-72 w-full">
+      <div className="h-64 w-full">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={completed} margin={{ top: 8, right: 16, left: 0, bottom: 8 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-            <XAxis dataKey="label" stroke="#94a3b8" fontSize={11} />
-            <YAxis stroke="#94a3b8" fontSize={11} unit="ms" />
+            <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+            <XAxis dataKey="label" stroke="#71717a" fontSize={11} />
+            <YAxis stroke="#71717a" fontSize={11} unit="ms" />
             <Tooltip
               contentStyle={{
-                backgroundColor: '#0f172a',
-                borderColor: '#334155',
-                borderRadius: '8px',
-                color: '#f1f5f9',
+                backgroundColor: '#09090b',
+                borderColor: '#27272a',
+                borderRadius: '6px',
+                color: '#f4f4f5',
+                fontSize: '12px',
               }}
             />
             <Legend />
-            <Line type="monotone" dataKey="LCP" stroke="#38bdf8" strokeWidth={2} dot={{ r: 3 }} connectNulls />
-            <Line type="monotone" dataKey="FCP" stroke="#34d399" strokeWidth={2} dot={{ r: 3 }} connectNulls />
-            <Line type="monotone" dataKey="SpeedIndex" stroke="#a78bfa" strokeWidth={2} dot={{ r: 3 }} connectNulls />
-            <Line type="monotone" dataKey="TTFB" stroke="#fbbf24" strokeWidth={2} dot={{ r: 3 }} connectNulls />
+            <Line type="monotone" dataKey="LCP" stroke="#10b981" strokeWidth={2} dot={{ r: 2.5 }} connectNulls />
+            <Line type="monotone" dataKey="FCP" stroke="#3b82f6" strokeWidth={2} dot={{ r: 2.5 }} connectNulls />
+            <Line type="monotone" dataKey="SpeedIndex" stroke="#a855f7" strokeWidth={2} dot={{ r: 2.5 }} connectNulls />
+            <Line type="monotone" dataKey="TTFB" stroke="#f59e0b" strokeWidth={2} dot={{ r: 2.5 }} connectNulls />
           </LineChart>
         </ResponsiveContainer>
       </div>

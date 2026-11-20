@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { AlertTriangle, CheckCircle2, Globe, Printer, XCircle } from 'lucide-react';
 import type { TestRun } from '../api/client';
+import { getBrandingSettings } from '../pages/SettingsPage';
 
 type Lang = 'nl' | 'en';
 
@@ -128,7 +129,8 @@ const COPY = {
 } as const;
 
 export function WhitelabelReport({ run }: { run: TestRun }) {
-  const [lang, setLang] = useState<Lang>('nl');
+  const branding = getBrandingSettings();
+  const [lang, setLang] = useState<Lang>(branding.defaultLang);
   const t = COPY[lang];
 
   let adviceList: AdviceItem[] = [];
@@ -187,15 +189,16 @@ export function WhitelabelReport({ run }: { run: TestRun }) {
 
   return (
     <div className="space-y-6">
-      <div className="print-card flex flex-wrap items-center justify-between gap-4 rounded-xl border border-slate-800 bg-slate-950/60 p-5">
+      <div className="print-card flex flex-wrap items-center justify-between gap-4 rounded-lg border border-zinc-800 bg-zinc-900/50 p-5">
         <div>
-          <div className="text-xs font-semibold uppercase tracking-wider text-sky-400">
-            {t.reportTitle}
+          <div className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
+            {branding.companyName} · {t.reportTitle}
           </div>
           <h3 className="mt-1 text-xl font-bold text-white">{run.client_name}</h3>
-          <div className="mt-1 text-xs text-slate-400">
-            {run.url} · {t.measuredAt}: {new Date(run.created_at + 'Z').toLocaleString('nl-NL')} ·{' '}
-            {t.profile}: {run.browser} / {run.connectivity}
+          <div className="mt-1 text-xs text-zinc-400">
+            {branding.subtitle} · {run.url} · {t.measuredAt}:{' '}
+            {new Date(run.created_at + 'Z').toLocaleString('nl-NL')} · {t.profile}: {run.browser} /{' '}
+            {run.connectivity}
             {run.mobile ? ' / mobile' : ''}
           </div>
         </div>

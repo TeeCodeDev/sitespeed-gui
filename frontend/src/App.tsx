@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Activity, CalendarClock, Gauge, Users } from 'lucide-react';
+import { Activity, CalendarClock, Gauge, Settings, Users } from 'lucide-react';
 import { api, type Client, type Project, type Schedule, type TestRun } from './api/client';
 import { ClientsPage } from './pages/ClientsPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { SchedulesPage } from './pages/SchedulesPage';
+import { SettingsPage } from './pages/SettingsPage';
 import { SharedReportPage } from './pages/SharedReportPage';
 
-type Tab = 'dashboard' | 'clients' | 'schedules';
+type Tab = 'dashboard' | 'clients' | 'schedules' | 'settings';
 
 export function App() {
   const shareToken = new URLSearchParams(window.location.search).get('share');
@@ -47,58 +48,63 @@ function MainApp() {
     void refreshAll();
   }, [refreshAll]);
 
-  // Poll automatically while any run is queued or running
+  const activeCount = runs.filter((r) => r.status === 'queued' || r.status === 'running').length;
+
   useEffect(() => {
-    const hasActive = runs.some((r) => r.status === 'queued' || r.status === 'running');
-    if (!hasActive) return;
+    if (activeCount === 0) return;
     const timer = setInterval(() => void refreshAll(), 4000);
     return () => clearInterval(timer);
-  }, [runs, refreshAll]);
+  }, [activeCount, refreshAll]);
+
+  const navItem = (id: Tab, label: string, Icon: typeof Activity, badge?: number) => (
+    <button
+      onClick={() => setTab(id)}
+      className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-xs font-medium transition-colors ${
+        tab === id
+          ? 'bg-zinc-800 text-zinc-100'
+          : 'text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200'
+      }`}
+    >
+      <span className="flex items-center gap-2.5">
+        <Icon className="h-4 w-4" />
+        {label}
+      </span>
+      {badge !== undefined && badge > 0 && (
+        <span className="rounded bg-amber-500/20 px-1.5 py-0.5 font-mono text-[10px] text-amber-300">
+          {badge}
+        </span>
+      )}
+    </button>
+  );
 
   return (
-    <div className="flex min-h-screen flex-col md:flex-row">
-      <aside className="no-print w-full border-b border-slate-800 bg-slate-900/80 p-4 md:w-60 md:border-b-0 md:border-r">
-        <div className="mb-6 flex items-center gap-2.5 px-2">
-          <Gauge className="h-6 w-6 text-sky-400" />
-          <div>
-            <div className="text-sm font-bold text-white">SiteSpeed GUI</div>
-            <div className="text-[11px] text-slate-400">Sitespeed.io &amp; Browsertime</div>
+    <div className="flex min-h-screen flex-col bg-zinc-950 text-zinc-100 md:flex-row">
+      <aside className="no-print flex w-full flex-col justify-between border-b border-zinc-800/80 bg-zinc-950 p-3 md:w-56 md:border-b-0 md:border-r">
+        <div>
+          <div className="mb-5 flex items-center gap-2.5 px-2 py-1">
+            <div className="flex h-7 w-7 items-center justify-center rounded-md border border-zinc-700 bg-zinc-900">
+              <Gauge className="h-4 w-4 text-zinc-100" />
+            </div>
+            <div>
+              <div className="text-xs font-semibold tracking-tight text-zinc-100">SiteSpeed</div>
+              <div className="text-[10px] text-zinc-500">Performance Workbench</div>
+            </div>
           </div>
+          <nav className="space-y-1">
+            {navItem('dashboard', 'Metingen & Historie', Activity, activeCount)}
+            {navItem('clients', 'Klanten & Sites', Users)}
+            {navItem('schedules', 'Planning (Cron)', CalendarClock)}
+            {navItem('settings', 'Whitelabel & Setup', Settings)}
+          </nav>
         </div>
-        <nav className="space-y-1">
-          <button
-            onClick={() => setTab('dashboard')}
-            className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium ${
-              tab === 'dashboard' ? 'bg-sky-500/15 text-sky-300' : 'text-slate-300 hover:bg-slate-800'
-            }`}
-          >
-            <Activity className="h-4 w-4" />
-            Dashboard &amp; Historie
-          </button>
-          <button
-            onClick={() => setTab('clients')}
-            className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium ${
-              tab === 'clients' ? 'bg-sky-500/15 text-sky-300' : 'text-slate-300 hover:bg-slate-800'
-            }`}
-          >
-            <Users className="h-4 w-4" />
-            Klanten &amp; Websites
-          </button>
-          <button
-            onClick={() => setTab('schedules')}
-            className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium ${
-              tab === 'schedules' ? 'bg-sky-500/15 text-sky-300' : 'text-slate-300 hover:bg-slate-800'
-            }`}
-          >
-            <CalendarClock className="h-4 w-4" />
-            Geplande Metingen
-          </button>
-        </nav>
+        <div className="hidden px-2 pt-4 text-[10px] text-zinc-600 md:block">
+          Sitespeed.io + Browsertime
+        </div>
       </aside>
 
-      <main className="flex-1 p-6">
+      <main className="flex-1 p-5 md:p-6">
         {error && (
-          <div className="mb-4 rounded-lg border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-300">
+          <div className="mb-4 rounded-md border border-red-500/40 bg-red-500/10 p-3 text-xs text-red-300">
             {error}
           </div>
         )}
@@ -116,6 +122,7 @@ function MainApp() {
         {tab === 'schedules' && (
           <SchedulesPage clients={clients} schedules={schedules} onRefresh={refreshAll} />
         )}
+        {tab === 'settings' && <SettingsPage />}
       </main>
     </div>
   );
