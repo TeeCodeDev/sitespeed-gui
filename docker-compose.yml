@@ -1,0 +1,36 @@
+services:
+  sitespeed-gui:
+    image: ghcr.io/teecodedev/sitespeed-gui:latest
+    container_name: sitespeed-gui
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      - PORT=3000
+      - HOST=0.0.0.0
+      - NODE_ENV=production
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - DB_PATH=/data/db/sitespeed.sqlite
+      - RESULTS_DIR=/data/results
+      - DOCKER_SOCKET_PATH=/var/run/docker.sock
+      - RESULTS_VOLUME_NAME=sitespeed_results
+      - SITESPEED_IMAGE=${SITESPEED_IMAGE:-sitespeedio/sitespeed.io:36.4.0}
+      - MAX_CONCURRENT_RUNS=${MAX_CONCURRENT_RUNS:-1}
+      - RUN_TIMEOUT_MS=${RUN_TIMEOUT_MS:-300000}
+      - CONTAINER_MEMORY_MB=${CONTAINER_MEMORY_MB:-2048}
+      - CONTAINER_SHM_MB=${CONTAINER_SHM_MB:-1024}
+      - CONTAINER_CPU_CORES=${CONTAINER_CPU_CORES:-2}
+      - ALLOW_PRIVATE_NETWORKS=${ALLOW_PRIVATE_NETWORKS:-false}
+      - AUTH_USERNAME=${AUTH_USERNAME:-}
+      - AUTH_PASSWORD=${AUTH_PASSWORD:-}
+      - CORS_ORIGIN=${CORS_ORIGIN:-*}
+    volumes:
+      - sitespeed_db:/data/db
+      - sitespeed_results:/data/results
+      - /var/run/docker.sock:/var/run/docker.sock
+
+volumes:
+  sitespeed_db:
+    name: sitespeed_db
+  sitespeed_results:
+    name: sitespeed_results
