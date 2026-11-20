@@ -38,6 +38,8 @@ test('buildSitespeedArgs produces strict allowlisted CLI array', () => {
     'true',
     '--browsertime.visualMetrics',
     'true',
+    '--plugins.add',
+    'analysisstorer',
     '--copyLatestFilesToBase',
     'false',
     '--mobile',

@@ -33,6 +33,8 @@ export function buildSitespeedArgs(run: TestRunRecord, containerOutputDir: strin
     'true',
     '--browsertime.visualMetrics',
     'true',
+    '--plugins.add',
+    'analysisstorer',
     '--copyLatestFilesToBase',
     'false',
   ];
