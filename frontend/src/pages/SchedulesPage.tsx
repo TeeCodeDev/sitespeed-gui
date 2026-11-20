@@ -49,26 +49,26 @@ export function SchedulesPage({ clients, schedules, onRefresh }: SchedulesPagePr
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-white">Geplande Metingen</h1>
-        <p className="text-sm text-slate-400">
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Geplande Metingen</h1>
+        <p className="text-sm text-slate-500">
           Automatische periodieke metingen via cron-schema (bijv. dagelijks om 06:00)
         </p>
       </div>
 
       {error && (
-        <div className="rounded-lg border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-300">
+        <div className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
           {error}
         </div>
       )}
 
       <form
         onSubmit={handleCreate}
-        className="grid grid-cols-1 gap-3 rounded-xl border border-slate-800 bg-slate-900/60 p-5 sm:grid-cols-3"
+        className="grid grid-cols-1 gap-3 rounded-xl border border-slate-200 bg-white p-5 shadow-xs sm:grid-cols-3"
       >
         <select
           value={clientId || clients[0]?.id || ''}
           onChange={(e) => setClientId(Number(e.target.value))}
-          className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
+          className="rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-900"
         >
           {clients.map((c) => (
             <option key={c.id} value={c.id}>
@@ -82,7 +82,7 @@ export function SchedulesPage({ clients, schedules, onRefresh }: SchedulesPagePr
           placeholder="Naam (bijv. Dagelijkse homepage check)"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
+          className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
         />
         <input
           type="url"
@@ -90,7 +90,7 @@ export function SchedulesPage({ clients, schedules, onRefresh }: SchedulesPagePr
           placeholder="https://voorbeeld.nl"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
-          className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
+          className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
         />
         <input
           type="text"
@@ -98,13 +98,13 @@ export function SchedulesPage({ clients, schedules, onRefresh }: SchedulesPagePr
           placeholder="Cron (bijv. 0 6 * * *)"
           value={cronExpression}
           onChange={(e) => setCronExpression(e.target.value)}
-          className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-sm text-white"
+          className="rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono text-sm text-slate-900"
         />
         <div className="flex gap-2">
           <select
             value={browser}
             onChange={(e) => setBrowser(e.target.value as BrowserType)}
-            className="flex-1 rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
+            className="flex-1 rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-900"
           >
             <option value="chrome">Chrome</option>
             <option value="firefox">Firefox</option>
@@ -112,7 +112,7 @@ export function SchedulesPage({ clients, schedules, onRefresh }: SchedulesPagePr
           <select
             value={connectivity}
             onChange={(e) => setConnectivity(e.target.value as ConnectivityType)}
-            className="flex-1 rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
+            className="flex-1 rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-900"
           >
             <option value="cable">Cable</option>
             <option value="4g">4G</option>
@@ -121,7 +121,7 @@ export function SchedulesPage({ clients, schedules, onRefresh }: SchedulesPagePr
           </select>
         </div>
         <div className="flex items-center justify-between gap-2">
-          <label className="flex items-center gap-2 text-xs text-slate-300">
+          <label className="flex items-center gap-2 text-xs font-medium text-slate-700">
             <input
               type="checkbox"
               checked={mobile}
@@ -131,7 +131,7 @@ export function SchedulesPage({ clients, schedules, onRefresh }: SchedulesPagePr
           </label>
           <button
             type="submit"
-            className="flex items-center gap-1.5 rounded-lg bg-sky-500 px-4 py-2 text-xs font-semibold text-slate-950 hover:bg-sky-400"
+            className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-xs font-semibold text-white hover:bg-indigo-700"
           >
             <CalendarClock className="h-4 w-4" />
             Schema Toevoegen
@@ -143,23 +143,23 @@ export function SchedulesPage({ clients, schedules, onRefresh }: SchedulesPagePr
         {schedules.map((s) => (
           <div
             key={s.id}
-            className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-slate-800 bg-slate-900/60 p-4"
+            className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-xs"
           >
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-semibold text-white">{s.name}</span>
-                <span className="rounded bg-slate-800 px-2 py-0.5 font-mono text-xs text-sky-300">
+                <span className="font-semibold text-slate-900">{s.name}</span>
+                <span className="rounded bg-slate-100 px-2 py-0.5 font-mono text-xs text-indigo-700">
                   {s.cron_expression}
                 </span>
                 <span
-                  className={`rounded-full px-2 py-0.5 text-xs ${
-                    s.enabled ? 'bg-emerald-500/15 text-emerald-300' : 'bg-slate-700 text-slate-300'
+                  className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                    s.enabled ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-600'
                   }`}
                 >
                   {s.enabled ? 'Actief' : 'Gepauzeerd'}
                 </span>
               </div>
-              <p className="mt-1 text-xs text-slate-400">
+              <p className="mt-1 text-xs text-slate-500">
                 {s.url} · {s.browser} · {s.connectivity}
                 {s.last_run_at ? ` · Laatste run: ${new Date(s.last_run_at + 'Z').toLocaleString('nl-NL')}` : ''}
               </p>
@@ -167,14 +167,14 @@ export function SchedulesPage({ clients, schedules, onRefresh }: SchedulesPagePr
             <div className="flex items-center gap-2">
               <button
                 onClick={() => api.toggleSchedule(s.id).then(onRefresh)}
-                className="rounded p-1.5 text-slate-300 hover:bg-slate-800"
+                className="rounded-md p-1.5 text-slate-600 hover:bg-slate-100"
                 title="Aan/uit zetten"
               >
                 <Power className="h-4 w-4" />
               </button>
               <button
                 onClick={() => api.deleteSchedule(s.id).then(onRefresh)}
-                className="rounded p-1.5 text-red-400 hover:bg-slate-800"
+                className="rounded-md p-1.5 text-rose-600 hover:bg-rose-50"
                 title="Verwijderen"
               >
                 <Trash2 className="h-4 w-4" />

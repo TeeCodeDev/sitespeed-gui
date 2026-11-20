@@ -59,18 +59,18 @@ function MainApp() {
   const navItem = (id: Tab, label: string, Icon: typeof Activity, badge?: number) => (
     <button
       onClick={() => setTab(id)}
-      className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-xs font-medium transition-colors ${
+      className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
         tab === id
-          ? 'bg-zinc-800 text-zinc-100'
-          : 'text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200'
+          ? 'bg-indigo-50 text-indigo-700'
+          : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
       }`}
     >
       <span className="flex items-center gap-2.5">
-        <Icon className="h-4 w-4" />
+        <Icon className={`h-4 w-4 ${tab === id ? 'text-indigo-600' : 'text-slate-400'}`} />
         {label}
       </span>
       {badge !== undefined && badge > 0 && (
-        <span className="rounded bg-amber-500/20 px-1.5 py-0.5 font-mono text-[10px] text-amber-300">
+        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">
           {badge}
         </span>
       )}
@@ -78,51 +78,53 @@ function MainApp() {
   );
 
   return (
-    <div className="flex min-h-screen flex-col bg-zinc-950 text-zinc-100 md:flex-row">
-      <aside className="no-print flex w-full flex-col justify-between border-b border-zinc-800/80 bg-zinc-950 p-3 md:w-56 md:border-b-0 md:border-r">
+    <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900 md:flex-row">
+      <aside className="no-print flex w-full flex-col justify-between border-b border-slate-200 bg-white p-4 md:w-60 md:border-b-0 md:border-r">
         <div>
-          <div className="mb-5 flex items-center gap-2.5 px-2 py-1">
-            <div className="flex h-7 w-7 items-center justify-center rounded-md border border-zinc-700 bg-zinc-900">
-              <Gauge className="h-4 w-4 text-zinc-100" />
+          <div className="mb-6 flex items-center gap-2.5 px-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-white shadow-xs">
+              <Gauge className="h-4 w-4" />
             </div>
             <div>
-              <div className="text-xs font-semibold tracking-tight text-zinc-100">SiteSpeed</div>
-              <div className="text-[10px] text-zinc-500">Performance Workbench</div>
+              <div className="text-sm font-bold tracking-tight text-slate-900">SiteSpeed</div>
+              <div className="text-[11px] text-slate-500">Performance Monitor</div>
             </div>
           </div>
           <nav className="space-y-1">
-            {navItem('dashboard', 'Metingen & Historie', Activity, activeCount)}
+            {navItem('dashboard', 'Metingen', Activity, activeCount)}
             {navItem('clients', 'Klanten & Sites', Users)}
-            {navItem('schedules', 'Planning (Cron)', CalendarClock)}
-            {navItem('settings', 'Whitelabel & Setup', Settings)}
+            {navItem('schedules', 'Planning', CalendarClock)}
+            {navItem('settings', 'Whitelabel', Settings)}
           </nav>
         </div>
-        <div className="hidden px-2 pt-4 text-[10px] text-zinc-600 md:block">
-          Sitespeed.io + Browsertime
+        <div className="hidden border-t border-slate-100 px-2 pt-3 text-[11px] text-slate-400 md:block">
+          Sitespeed.io &amp; Browsertime
         </div>
       </aside>
 
-      <main className="flex-1 p-5 md:p-6">
-        {error && (
-          <div className="mb-4 rounded-md border border-red-500/40 bg-red-500/10 p-3 text-xs text-red-300">
-            {error}
-          </div>
-        )}
-        {tab === 'dashboard' && (
-          <DashboardPage
-            clients={clients}
-            projects={projects}
-            runs={runs}
-            onRefresh={refreshAll}
-          />
-        )}
-        {tab === 'clients' && (
-          <ClientsPage clients={clients} projects={projects} onRefresh={refreshAll} />
-        )}
-        {tab === 'schedules' && (
-          <SchedulesPage clients={clients} schedules={schedules} onRefresh={refreshAll} />
-        )}
-        {tab === 'settings' && <SettingsPage />}
+      <main className="flex-1 p-5 md:p-8">
+        <div className="mx-auto max-w-6xl">
+          {error && (
+            <div className="mb-4 rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
+              {error}
+            </div>
+          )}
+          {tab === 'dashboard' && (
+            <DashboardPage
+              clients={clients}
+              projects={projects}
+              runs={runs}
+              onRefresh={refreshAll}
+            />
+          )}
+          {tab === 'clients' && (
+            <ClientsPage clients={clients} projects={projects} onRefresh={refreshAll} />
+          )}
+          {tab === 'schedules' && (
+            <SchedulesPage clients={clients} schedules={schedules} onRefresh={refreshAll} />
+          )}
+          {tab === 'settings' && <SettingsPage />}
+        </div>
       </main>
     </div>
   );

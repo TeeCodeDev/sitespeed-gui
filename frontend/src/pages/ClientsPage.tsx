@@ -53,14 +53,14 @@ export function ClientsPage({ clients, projects, onRefresh }: ClientsPageProps) 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-white">Klanten &amp; Websites</h1>
-        <p className="text-sm text-slate-400">
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Klanten &amp; Websites</h1>
+        <p className="text-sm text-slate-500">
           Beheer klanten en bijbehorende websites om metingen te groeperen en te filteren
         </p>
       </div>
 
       {error && (
-        <div className="rounded-lg border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-300">
+        <div className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
           {error}
         </div>
       )}
@@ -68,10 +68,10 @@ export function ClientsPage({ clients, projects, onRefresh }: ClientsPageProps) 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <form
           onSubmit={handleAddClient}
-          className="space-y-3 rounded-xl border border-slate-800 bg-slate-900/60 p-5"
+          className="space-y-3 rounded-xl border border-slate-200 bg-white p-5 shadow-xs"
         >
-          <h2 className="flex items-center gap-2 text-sm font-semibold text-white">
-            <UserPlus className="h-4 w-4 text-sky-400" />
+          <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+            <UserPlus className="h-4 w-4 text-indigo-600" />
             Nieuwe Klant
           </h2>
           <input
@@ -80,18 +80,18 @@ export function ClientsPage({ clients, projects, onRefresh }: ClientsPageProps) 
             placeholder="Klantnaam (bijv. Acme B.V.)"
             value={clientName}
             onChange={(e) => setClientName(e.target.value)}
-            className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
+            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
           />
           <input
             type="email"
             placeholder="Contact e-mail (optioneel)"
             value={contactEmail}
             onChange={(e) => setContactEmail(e.target.value)}
-            className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
+            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
           />
           <button
             type="submit"
-            className="rounded-lg bg-sky-500 px-4 py-2 text-xs font-semibold text-slate-950 hover:bg-sky-400"
+            className="rounded-lg bg-indigo-600 px-4 py-2 text-xs font-semibold text-white hover:bg-indigo-700"
           >
             Klant Toevoegen
           </button>
@@ -99,16 +99,16 @@ export function ClientsPage({ clients, projects, onRefresh }: ClientsPageProps) 
 
         <form
           onSubmit={handleAddProject}
-          className="space-y-3 rounded-xl border border-slate-800 bg-slate-900/60 p-5"
+          className="space-y-3 rounded-xl border border-slate-200 bg-white p-5 shadow-xs"
         >
-          <h2 className="flex items-center gap-2 text-sm font-semibold text-white">
-            <FolderPlus className="h-4 w-4 text-emerald-400" />
+          <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+            <FolderPlus className="h-4 w-4 text-emerald-600" />
             Nieuwe Website / Project
           </h2>
           <select
             value={projClientId || clients[0]?.id || ''}
             onChange={(e) => setProjClientId(Number(e.target.value))}
-            className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
+            className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-900"
           >
             {clients.map((c) => (
               <option key={c.id} value={c.id}>
@@ -123,7 +123,7 @@ export function ClientsPage({ clients, projects, onRefresh }: ClientsPageProps) 
               placeholder="Projectnaam (bijv. Webshop)"
               value={projName}
               onChange={(e) => setProjName(e.target.value)}
-              className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
+              className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
             />
             <input
               type="url"
@@ -131,12 +131,12 @@ export function ClientsPage({ clients, projects, onRefresh }: ClientsPageProps) 
               placeholder="https://voorbeeld.nl"
               value={projUrl}
               onChange={(e) => setProjUrl(e.target.value)}
-              className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
+              className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
             />
           </div>
           <button
             type="submit"
-            className="rounded-lg bg-emerald-500 px-4 py-2 text-xs font-semibold text-slate-950 hover:bg-emerald-400"
+            className="rounded-lg bg-emerald-600 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-700"
           >
             Project Toevoegen
           </button>
@@ -149,18 +149,18 @@ export function ClientsPage({ clients, projects, onRefresh }: ClientsPageProps) 
           return (
             <div
               key={client.id}
-              className="rounded-xl border border-slate-800 bg-slate-900/60 p-5"
+              className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs"
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-base font-semibold text-white">{client.name}</h3>
-                  <p className="text-xs text-slate-400">
+                  <h3 className="text-base font-semibold text-slate-900">{client.name}</h3>
+                  <p className="text-xs text-slate-500">
                     Slug: {client.slug} {client.contact_email ? `· ${client.contact_email}` : ''}
                   </p>
                 </div>
                 <button
                   onClick={() => api.deleteClient(client.id).then(onRefresh)}
-                  className="rounded p-1.5 text-red-400 hover:bg-slate-800"
+                  className="rounded-md p-1.5 text-rose-600 hover:bg-rose-50"
                   title="Klant verwijderen"
                 >
                   <Trash2 className="h-4 w-4" />
@@ -171,15 +171,15 @@ export function ClientsPage({ clients, projects, onRefresh }: ClientsPageProps) 
                   {clientProjs.map((p) => (
                     <div
                       key={p.id}
-                      className="flex items-center justify-between rounded-lg border border-slate-800 bg-slate-950/70 px-3 py-2 text-xs"
+                      className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs"
                     >
                       <div>
-                        <div className="font-medium text-slate-200">{p.name}</div>
-                        <div className="text-slate-400">{p.base_url}</div>
+                        <div className="font-medium text-slate-800">{p.name}</div>
+                        <div className="text-slate-500">{p.base_url}</div>
                       </div>
                       <button
                         onClick={() => api.deleteProject(p.id).then(onRefresh)}
-                        className="text-red-400 hover:text-red-300"
+                        className="text-rose-600 hover:text-rose-700"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>

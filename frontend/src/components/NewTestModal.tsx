@@ -98,17 +98,17 @@ export function NewTestModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-      <div className="w-full max-w-lg rounded-xl border border-slate-800 bg-slate-900 p-6 shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-xs">
+      <div className="w-full max-w-lg rounded-xl border border-slate-200 bg-white p-6 shadow-2xl">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-white">Nieuwe Snelheidstest Starten</h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-white">
+          <h2 className="text-lg font-bold text-slate-900">Nieuwe Snelheidstest Starten</h2>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-700">
             <X className="h-5 w-5" />
           </button>
         </div>
 
         {error && (
-          <div className="mb-4 rounded-lg border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-300">
+          <div className="mb-4 rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
             {error}
           </div>
         )}
@@ -117,11 +117,11 @@ export function NewTestModal({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <div className="mb-1 flex items-center justify-between">
-                <label className="block text-xs font-medium text-slate-300">Klant *</label>
+                <label className="block text-xs font-medium text-slate-700">Klant *</label>
                 <button
                   type="button"
                   onClick={() => setShowAddClient((v) => !v)}
-                  className="flex items-center gap-1 text-[11px] font-medium text-sky-400 hover:text-sky-300"
+                  className="flex items-center gap-1 text-[11px] font-semibold text-indigo-600 hover:text-indigo-700"
                 >
                   <UserPlus className="h-3 w-3" />
                   {showAddClient ? 'Sluiten' : 'Nieuwe klant'}
@@ -133,7 +133,7 @@ export function NewTestModal({
                   setClientId(Number(e.target.value));
                   setProjectId('');
                 }}
-                className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
+                className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-900"
               >
                 {clients.length === 0 && <option value={0}>-- Maak eerst een klant --</option>}
                 {clients.map((c) => (
@@ -144,11 +144,11 @@ export function NewTestModal({
               </select>
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-300">Project (optioneel)</label>
+              <label className="mb-1 block text-xs font-medium text-slate-700">Project (optioneel)</label>
               <select
                 value={projectId}
                 onChange={(e) => handleProjectChange(e.target.value)}
-                className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
+                className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-900"
               >
                 <option value="">-- Handmatige URL --</option>
                 {clientProjects.map((p) => (
@@ -161,19 +161,19 @@ export function NewTestModal({
           </div>
 
           {showAddClient && (
-            <div className="flex gap-2 rounded-lg border border-slate-800 bg-slate-950/70 p-2.5">
+            <div className="flex gap-2 rounded-lg border border-slate-200 bg-slate-50 p-2.5">
               <input
                 type="text"
                 placeholder="Nieuwe klantnaam (bijv. Acme B.V.)"
                 value={newClientName}
                 onChange={(e) => setNewClientName(e.target.value)}
-                className="flex-1 rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 text-sm text-white"
+                className="flex-1 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-900"
               />
               <button
                 type="button"
                 disabled={creatingClient || !newClientName.trim()}
                 onClick={handleCreateClient}
-                className="rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-slate-950 hover:bg-emerald-400 disabled:opacity-50"
+                className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
               >
                 {creatingClient ? '...' : 'Toevoegen'}
               </button>
@@ -181,35 +181,35 @@ export function NewTestModal({
           )}
 
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-300">Te testen URL *</label>
+            <label className="mb-1 block text-xs font-medium text-slate-700">Te testen URL *</label>
             <input
               type="url"
               required
               placeholder="https://voorbeeld.nl/"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
+              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
             />
           </div>
 
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-300">Browser</label>
+              <label className="mb-1 block text-xs font-medium text-slate-700">Browser</label>
               <select
                 value={browser}
                 onChange={(e) => setBrowser(e.target.value as BrowserType)}
-                className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
+                className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-900"
               >
                 <option value="chrome">Chrome</option>
                 <option value="firefox">Firefox</option>
               </select>
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-300">Netwerkprofiel</label>
+              <label className="mb-1 block text-xs font-medium text-slate-700">Netwerkprofiel</label>
               <select
                 value={connectivity}
                 onChange={(e) => setConnectivity(e.target.value as ConnectivityType)}
-                className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
+                className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-900"
               >
                 <option value="cable">Cable (5/1 Mbps)</option>
                 <option value="4g">4G</option>
@@ -218,25 +218,25 @@ export function NewTestModal({
               </select>
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-300">Iteraties (1-10)</label>
+              <label className="mb-1 block text-xs font-medium text-slate-700">Iteraties (1-10)</label>
               <input
                 type="number"
                 min={1}
                 max={10}
                 value={iterations}
                 onChange={(e) => setIterations(Number(e.target.value))}
-                className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
               />
             </div>
           </div>
 
           <div className="flex items-center justify-between gap-4">
-            <label className="flex items-center gap-2 text-sm text-slate-300">
+            <label className="flex items-center gap-2 text-sm text-slate-700">
               <input
                 type="checkbox"
                 checked={mobile}
                 onChange={(e) => setMobile(e.target.checked)}
-                className="rounded border-slate-700 bg-slate-950"
+                className="rounded border-slate-300"
               />
               Mobiele viewport &amp; emulatie
             </label>
@@ -245,7 +245,7 @@ export function NewTestModal({
               placeholder="Tags (bijv. homepage, release)"
               value={tagsText}
               onChange={(e) => setTagsText(e.target.value)}
-              className="flex-1 rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
+              className="flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
             />
           </div>
 
@@ -253,14 +253,14 @@ export function NewTestModal({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800"
+              className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
             >
               Annuleren
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="rounded-lg bg-sky-500 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-sky-400 disabled:opacity-50"
+              className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
             >
               {submitting ? 'Starten...' : 'Test in Wachtrij Zetten'}
             </button>

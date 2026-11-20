@@ -50,51 +50,51 @@ export function SettingsPage() {
   return (
     <div className="max-w-2xl space-y-6">
       <div>
-        <h1 className="text-xl font-semibold text-zinc-100">Whitelabel &amp; Instellingen</h1>
-        <p className="mt-1 text-sm text-zinc-400">
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Whitelabel &amp; Instellingen</h1>
+        <p className="mt-1 text-sm text-slate-500">
           Pas de bedrijfsnaam en standaardtaal aan voor je klantrapporten en PDF-exports.
         </p>
       </div>
 
       <form
         onSubmit={handleSave}
-        className="space-y-4 rounded-lg border border-zinc-800 bg-zinc-900/50 p-5"
+        className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-xs"
       >
-        <div className="flex items-center gap-2 text-sm font-medium text-zinc-200">
-          <Palette className="h-4 w-4 text-zinc-400" />
+        <div className="flex items-center gap-2 text-sm font-semibold text-slate-800">
+          <Palette className="h-4 w-4 text-indigo-600" />
           Rapport Branding
         </div>
 
         <div>
-          <label className="mb-1 block text-xs font-medium text-zinc-400">
+          <label className="mb-1 block text-xs font-medium text-slate-700">
             Bedrijfsnaam / Label op rapporten
           </label>
           <input
             type="text"
             value={companyName}
             onChange={(e) => setCompanyName(e.target.value)}
-            className="w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 focus:border-zinc-500 focus:outline-none"
+            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none"
           />
         </div>
 
         <div>
-          <label className="mb-1 block text-xs font-medium text-zinc-400">Ondertitel</label>
+          <label className="mb-1 block text-xs font-medium text-slate-700">Ondertitel</label>
           <input
             type="text"
             value={subtitle}
             onChange={(e) => setSubtitle(e.target.value)}
-            className="w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 focus:border-zinc-500 focus:outline-none"
+            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none"
           />
         </div>
 
         <div>
-          <label className="mb-1 block text-xs font-medium text-zinc-400">
+          <label className="mb-1 block text-xs font-medium text-slate-700">
             Standaard rapporttaal
           </label>
           <select
             value={defaultLang}
             onChange={(e) => setDefaultLang(e.target.value as 'nl' | 'en')}
-            className="w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 focus:border-zinc-500 focus:outline-none"
+            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none"
           >
             <option value="nl">Nederlands (NL)</option>
             <option value="en">Engels (EN)</option>
@@ -104,13 +104,13 @@ export function SettingsPage() {
         <div className="flex items-center gap-3 pt-2">
           <button
             type="submit"
-            className="rounded-md bg-zinc-100 px-4 py-2 text-xs font-semibold text-zinc-950 hover:bg-white"
+            className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
           >
             Instellingen Opslaan
           </button>
           {saved && (
-            <span className="flex items-center gap-1 text-xs text-emerald-400">
-              <Check className="h-3.5 w-3.5" />
+            <span className="flex items-center gap-1 text-sm font-medium text-emerald-600">
+              <Check className="h-4 w-4" />
               Opgeslagen
             </span>
           )}
