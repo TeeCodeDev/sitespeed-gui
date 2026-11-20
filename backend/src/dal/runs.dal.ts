@@ -45,6 +45,7 @@ export interface RunWithMetrics extends TestRunRecord {
   coach_score: number | null;
   video_rel_path: string | null;
   har_rel_path: string | null;
+  advice_json: string | null;
 }
 
 export interface UpsertMetricsInput {
@@ -62,6 +63,7 @@ export interface UpsertMetricsInput {
   coachScore?: number | null;
   videoRelPath?: string | null;
   harRelPath?: string | null;
+  adviceJson?: string | null;
 }
 
 export const runsDal = {
@@ -93,7 +95,7 @@ export const runsDal = {
         SELECT r.*, c.name AS client_name, p.name AS project_name,
                m.fcp_ms, m.lcp_ms, m.cls, m.tbt_ms, m.ttfb_ms,
                m.speed_index_ms, m.fully_loaded_ms, m.page_size_bytes,
-               m.requests_count, m.coach_score, m.video_rel_path, m.har_rel_path
+               m.requests_count, m.coach_score, m.video_rel_path, m.har_rel_path, m.advice_json
         FROM test_runs r
         JOIN clients c ON c.id = r.client_id
         LEFT JOIN projects p ON p.id = r.project_id
@@ -147,7 +149,7 @@ export const runsDal = {
         SELECT r.*, c.name AS client_name, p.name AS project_name,
                m.fcp_ms, m.lcp_ms, m.cls, m.tbt_ms, m.ttfb_ms,
                m.speed_index_ms, m.fully_loaded_ms, m.page_size_bytes,
-               m.requests_count, m.coach_score, m.video_rel_path, m.har_rel_path
+               m.requests_count, m.coach_score, m.video_rel_path, m.har_rel_path, m.advice_json
         FROM test_runs r
         JOIN clients c ON c.id = r.client_id
         LEFT JOIN projects p ON p.id = r.project_id
@@ -205,8 +207,8 @@ export const runsDal = {
         INSERT INTO run_metrics (
           run_id, url, fcp_ms, lcp_ms, cls, tbt_ms, ttfb_ms,
           speed_index_ms, fully_loaded_ms, page_size_bytes,
-          requests_count, coach_score, video_rel_path, har_rel_path
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          requests_count, coach_score, video_rel_path, har_rel_path, advice_json
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(run_id) DO UPDATE SET
           fcp_ms = excluded.fcp_ms,
           lcp_ms = excluded.lcp_ms,
@@ -219,7 +221,8 @@ export const runsDal = {
           requests_count = excluded.requests_count,
           coach_score = excluded.coach_score,
           video_rel_path = excluded.video_rel_path,
-          har_rel_path = excluded.har_rel_path
+          har_rel_path = excluded.har_rel_path,
+          advice_json = excluded.advice_json
       `)
       .run(
         input.runId,
@@ -235,7 +238,8 @@ export const runsDal = {
         input.requestsCount ?? null,
         input.coachScore ?? null,
         input.videoRelPath ?? null,
-        input.harRelPath ?? null
+        input.harRelPath ?? null,
+        input.adviceJson ?? null
       );
 
     return getDb()

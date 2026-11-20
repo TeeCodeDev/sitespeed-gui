@@ -50,6 +50,7 @@ export interface TestRun {
   coach_score: number | null;
   video_rel_path: string | null;
   har_rel_path: string | null;
+  advice_json: string | null;
 }
 
 export interface Schedule {
@@ -120,6 +121,7 @@ export const api = {
     }
     return request<{ runs: TestRun[] }>(`/api/runs?${qs.toString()}`);
   },
+  getRun: (id: number) => request<{ run: TestRun }>(`/api/runs/${id}`),
   createRun: (body: {
     clientId: number;
     projectId?: number | null;

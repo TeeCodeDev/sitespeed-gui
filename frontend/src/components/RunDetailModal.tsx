@@ -1,25 +1,28 @@
 import { useEffect, useState } from 'react';
-import { ExternalLink, FileDown, Terminal, X } from 'lucide-react';
+import { ExternalLink, FileDown, FileText, Terminal, X } from 'lucide-react';
 import { api, type TestRun } from '../api/client';
+import { WhitelabelReport } from './WhitelabelReport';
 
 interface RunDetailModalProps {
   run: TestRun;
   onClose: () => void;
 }
 
-function MetricBox({ label, value, unit }: { label: string; value: number | null; unit: string }) {
-  return (
-    <div className="rounded-lg border border-slate-800 bg-slate-950/70 p-3">
-      <div className="text-xs text-slate-400">{label}</div>
-      <div className="mt-1 text-lg font-bold text-white">
-        {value !== null ? `${value}${unit}` : '—'}
-      </div>
-    </div>
-  );
-}
+type ModalTab = 'whitelabel' | 'technical' | 'logs';
 
-export function RunDetailModal({ run, onClose }: RunDetailModalProps) {
+export function RunDetailModal({ run: initialRun, onClose }: RunDetailModalProps) {
+  const [run, setRun] = useState<TestRun>(initialRun);
   const [logs, setLogs] = useState<string>('');
+  const [tab, setTab] = useState<ModalTab>(
+    initialRun.status === 'running' || initialRun.status === 'queued' ? 'logs' : 'whitelabel'
+  );
+
+  useEffect(() => {
+    api
+      .getRun(initialRun.id)
+      .then((res) => setRun(res.run))
+      .catch(() => undefined);
+  }, [initialRun.id, initialRun.status]);
 
   useEffect(() => {
     let active = true;
@@ -46,10 +49,6 @@ export function RunDetailModal({ run, onClose }: RunDetailModalProps) {
 
   const isCompleted = run.status === 'completed';
   const reportUrl = isCompleted && run.report_dir ? `/reports/${run.report_dir}/index.html` : null;
-  const videoUrl =
-    isCompleted && run.report_dir && run.video_rel_path
-      ? `/reports/${run.report_dir}/${run.video_rel_path}`
-      : null;
   const harUrl =
     isCompleted && run.report_dir && run.har_rel_path
       ? `/reports/${run.report_dir}/${run.har_rel_path}`
@@ -58,7 +57,7 @@ export function RunDetailModal({ run, onClose }: RunDetailModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4">
       <div className="flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-xl border border-slate-800 bg-slate-900 shadow-2xl">
-        <div className="flex items-center justify-between border-b border-slate-800 px-6 py-4">
+        <div className="no-print flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 px-6 py-4">
           <div>
             <h2 className="text-lg font-semibold text-white">
               Meting #{run.id} — {run.client_name}
@@ -81,10 +80,10 @@ export function RunDetailModal({ run, onClose }: RunDetailModalProps) {
                 href={reportUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center gap-1.5 rounded-lg bg-sky-500 px-3 py-1.5 text-xs font-semibold text-slate-950 hover:bg-sky-400"
+                className="flex items-center gap-1.5 rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-800"
               >
                 <ExternalLink className="h-4 w-4" />
-                Volledig Sitespeed Rapport
+                Raw Sitespeed HTML
               </a>
             )}
             <button onClick={onClose} className="ml-2 text-slate-400 hover:text-white">
@@ -93,12 +92,46 @@ export function RunDetailModal({ run, onClose }: RunDetailModalProps) {
           </div>
         </div>
 
+        <div className="no-print flex gap-2 border-b border-slate-800 bg-slate-950/50 px-6 py-2">
+          <button
+            onClick={() => setTab('whitelabel')}
+            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium ${
+              tab === 'whitelabel' ? 'bg-sky-500/20 text-sky-300' : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <FileText className="h-3.5 w-3.5" />
+            Whitelabel Rapport (NL/EN)
+          </button>
+          {reportUrl && (
+            <button
+              onClick={() => setTab('technical')}
+              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium ${
+                tab === 'technical'
+                  ? 'bg-sky-500/20 text-sky-300'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+              Technisch Rapport (Sitespeed)
+            </button>
+          )}
+          <button
+            onClick={() => setTab('logs')}
+            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium ${
+              tab === 'logs' ? 'bg-sky-500/20 text-sky-300' : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <Terminal className="h-3.5 w-3.5" />
+            Runner Logs {run.status === 'running' ? '(live)' : ''}
+          </button>
+        </div>
+
         <div className="flex-1 space-y-6 overflow-y-auto p-6">
           {(run.status === 'queued' || run.status === 'running') && (
             <div className="rounded-lg border border-sky-500/40 bg-sky-500/10 p-4 text-sm text-sky-200">
               {run.status === 'queued'
                 ? 'Deze meting staat in de wachtrij en wordt binnenkort gestart...'
-                : 'De Sitespeed.io / Browsertime meting is nu bezig. Het rapport en de laadvideo verschijnen automatisch zodra de run is afgerond.'}
+                : 'De meting is nu bezig. Bekijk het tabblad Runner Logs voor de live voortgang.'}
             </div>
           )}
 
@@ -108,60 +141,21 @@ export function RunDetailModal({ run, onClose }: RunDetailModalProps) {
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <MetricBox label="LCP" value={run.lcp_ms !== null ? Math.round(run.lcp_ms) : null} unit=" ms" />
-            <MetricBox label="FCP" value={run.fcp_ms !== null ? Math.round(run.fcp_ms) : null} unit=" ms" />
-            <MetricBox label="CLS" value={run.cls !== null ? Number(run.cls.toFixed(3)) : null} unit="" />
-            <MetricBox label="TBT" value={run.tbt_ms !== null ? Math.round(run.tbt_ms) : null} unit=" ms" />
-            <MetricBox label="TTFB" value={run.ttfb_ms !== null ? Math.round(run.ttfb_ms) : null} unit=" ms" />
-            <MetricBox
-              label="SpeedIndex"
-              value={run.speed_index_ms !== null ? Math.round(run.speed_index_ms) : null}
-              unit=" ms"
-            />
-            <MetricBox
-              label="Paginagrootte"
-              value={run.page_size_bytes !== null ? Math.round(run.page_size_bytes / 1024) : null}
-              unit=" KB"
-            />
-            <MetricBox label="Coach Score" value={run.coach_score} unit="/100" />
-          </div>
+          {tab === 'whitelabel' && <WhitelabelReport run={run} />}
 
-          {videoUrl && (
-            <div>
-              <h3 className="mb-2 text-sm font-semibold text-slate-200">
-                Browsertime Laadvideo (Visual Recording)
-              </h3>
-              <video
-                controls
-                src={videoUrl}
-                className="max-h-80 w-full rounded-lg border border-slate-800 bg-black"
-              />
-            </div>
+          {tab === 'technical' && reportUrl && (
+            <iframe
+              title={`Sitespeed report ${run.id}`}
+              src={reportUrl}
+              className="h-[600px] w-full rounded-lg border border-slate-800 bg-white"
+            />
           )}
 
-          {reportUrl && (
-            <div>
-              <h3 className="mb-2 text-sm font-semibold text-slate-200">
-                Ingebouwd Sitespeed.io HTML Rapport
-              </h3>
-              <iframe
-                title={`Sitespeed report ${run.id}`}
-                src={reportUrl}
-                className="h-[520px] w-full rounded-lg border border-slate-800 bg-white"
-              />
-            </div>
-          )}
-
-          <div>
-            <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-200">
-              <Terminal className="h-4 w-4 text-sky-400" />
-              Runner Logs {run.status === 'running' ? '(live)' : ''}
-            </h3>
-            <pre className="max-h-64 overflow-auto rounded-lg border border-slate-800 bg-slate-950 p-3 font-mono text-xs text-slate-300 whitespace-pre-wrap">
+          {tab === 'logs' && (
+            <pre className="max-h-[500px] overflow-auto rounded-lg border border-slate-800 bg-slate-950 p-4 font-mono text-xs text-slate-300 whitespace-pre-wrap">
               {logs || 'Nog geen logregels beschikbaar...'}
             </pre>
-          </div>
+          )}
         </div>
       </div>
     </div>

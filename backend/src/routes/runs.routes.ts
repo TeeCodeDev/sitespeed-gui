@@ -7,6 +7,7 @@ import { clientsDal } from '../dal/clients.dal.js';
 import { runsDal } from '../dal/runs.dal.js';
 import type { RunStatus } from '../db/types.js';
 import { getRunHostDir } from '../services/dockerRunner.service.js';
+import { parseSitespeedResults } from '../services/metricsParser.service.js';
 import { runQueueService } from '../services/queue.service.js';
 import { validateTargetUrl } from '../services/urlGuard.service.js';
 
@@ -50,8 +51,19 @@ export async function registerRunRoutes(app: FastifyInstance): Promise<void> {
     if (!Number.isInteger(id) || id <= 0) {
       return reply.code(400).send({ error: 'Invalid run ID' });
     }
-    const run = runsDal.getWithMetricsById(id);
+    let run = runsDal.getWithMetricsById(id);
     if (!run) return reply.code(404).send({ error: 'Run not found' });
+
+    if (run.status === 'completed' && !run.advice_json) {
+      const parsed = await parseSitespeedResults(run.id, run.url, getRunHostDir(run.id)).catch(
+        () => null
+      );
+      if (parsed) {
+        runsDal.upsertMetrics(parsed);
+        run = runsDal.getWithMetricsById(id) ?? run;
+      }
+    }
+
     return { run };
   });
 

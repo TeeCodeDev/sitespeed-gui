@@ -61,6 +61,7 @@ const SCHEMA_SQL = `
     coach_score REAL,
     video_rel_path TEXT,
     har_rel_path TEXT,
+    advice_json TEXT,
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     FOREIGN KEY (run_id) REFERENCES test_runs(id) ON DELETE CASCADE
   );
@@ -112,6 +113,12 @@ export function initDatabase(dbPath: string): DatabaseSync {
   const db = new DatabaseSync(dbPath);
   db.exec('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
   db.exec(SCHEMA_SQL);
+  // Safe additive migration for existing databases
+  try {
+    db.exec('ALTER TABLE run_metrics ADD COLUMN advice_json TEXT;');
+  } catch {
+    // Column already exists
+  }
   dbInstance = db;
   return db;
 }

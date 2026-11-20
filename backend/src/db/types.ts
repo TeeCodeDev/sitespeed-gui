@@ -55,6 +55,7 @@ export interface RunMetricsRecord {
   coach_score: number | null;
   video_rel_path: string | null;
   har_rel_path: string | null;
+  advice_json: string | null;
   created_at: string;
 }
 

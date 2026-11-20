@@ -56,6 +56,60 @@ async function walkFiles(dir: string, maxDepth = 6): Promise<string[]> {
   return results;
 }
 
+interface CoachAdviceItem {
+  category: 'performance' | 'bestpractice' | 'accessibility' | 'privacy';
+  id: string;
+  title: string;
+  description: string;
+  advice: string;
+  score: number;
+  offending: string[];
+}
+
+function extractCoachAdvice(coach: JsonRecord | null): CoachAdviceItem[] {
+  if (!coach) return [];
+  const adviceRoot =
+    (coach.advice && typeof coach.advice === 'object' ? (coach.advice as JsonRecord) : null) ?? coach;
+
+  const categories: Array<'performance' | 'bestpractice' | 'accessibility' | 'privacy'> = [
+    'performance',
+    'bestpractice',
+    'accessibility',
+    'privacy',
+  ];
+
+  const items: CoachAdviceItem[] = [];
+  for (const category of categories) {
+    const catObj = adviceRoot[category];
+    if (!catObj || typeof catObj !== 'object') continue;
+    const adviceList = (catObj as JsonRecord).adviceList;
+    if (!adviceList || typeof adviceList !== 'object') continue;
+
+    for (const [id, rawItem] of Object.entries(adviceList as JsonRecord)) {
+      if (!rawItem || typeof rawItem !== 'object') continue;
+      const item = rawItem as JsonRecord;
+      const score = typeof item.score === 'number' ? item.score : 100;
+      if (score >= 100) continue;
+
+      const offending = Array.isArray(item.offending)
+        ? item.offending.filter((u): u is string => typeof u === 'string').slice(0, 10)
+        : [];
+
+      items.push({
+        category,
+        id,
+        title: typeof item.title === 'string' ? item.title : id,
+        description: typeof item.description === 'string' ? item.description : '',
+        advice: typeof item.advice === 'string' ? item.advice : '',
+        score,
+        offending,
+      });
+    }
+  }
+
+  return items.sort((a, b) => a.score - b.score).slice(0, 40);
+}
+
 /**
  * Extracts Core Web Vitals, Browsertime timings, PageXray size/requests, and Coach score
  * from a completed Sitespeed.io output directory.
@@ -127,7 +181,11 @@ export async function parseSitespeedResults(
   const coachScore =
     getNestedNumber(coach, ['advice', 'score', 'median']) ??
     getNestedNumber(coach, ['advice', 'performance', 'score', 'median']) ??
-    getNestedNumber(coach, ['score', 'median']);
+    getNestedNumber(coach, ['advice', 'score']) ??
+    getNestedNumber(coach, ['score', 'median']) ??
+    (typeof coach?.score === 'number' ? coach.score : null);
+
+  const adviceItems = extractCoachAdvice(coach);
 
   return {
     runId,
@@ -144,5 +202,6 @@ export async function parseSitespeedResults(
     coachScore,
     videoRelPath: videoFile ? path.relative(runDir, videoFile).replace(/\\/g, '/') : null,
     harRelPath: harFile ? path.relative(runDir, harFile).replace(/\\/g, '/') : null,
+    adviceJson: adviceItems.length > 0 ? JSON.stringify(adviceItems) : null,
   };
 }
