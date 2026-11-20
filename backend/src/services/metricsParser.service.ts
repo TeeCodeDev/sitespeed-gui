@@ -142,41 +142,55 @@ export async function parseSitespeedResults(
   const coach = coachFile ? await readJsonSafe(coachFile) : null;
 
   const fcpMs =
-    getNestedNumber(bt, ['statistics', 'timings', 'paintTiming', 'first-contentful-paint', 'median']) ??
+    getNestedNumber(bt, ['googleWebVitals', 'firstContentfulPaint', 'median']) ??
     getNestedNumber(bt, ['timings', 'paintTiming', 'first-contentful-paint', 'median']) ??
+    getNestedNumber(bt, ['statistics', 'googleWebVitals', 'firstContentfulPaint', 'median']) ??
+    getNestedNumber(bt, ['statistics', 'timings', 'paintTiming', 'first-contentful-paint', 'median']) ??
     getNestedNumber(bt, ['firstPaint', 'median']);
 
   const lcpMs =
-    getNestedNumber(bt, ['statistics', 'timings', 'largestContentfulPaint', 'renderTime', 'median']) ??
-    getNestedNumber(bt, ['timings', 'largestContentfulPaint', 'renderTime', 'median']);
+    getNestedNumber(bt, ['googleWebVitals', 'largestContentfulPaint', 'median']) ??
+    getNestedNumber(bt, ['timings', 'largestContentfulPaint', 'renderTime', 'median']) ??
+    getNestedNumber(bt, ['statistics', 'googleWebVitals', 'largestContentfulPaint', 'median']) ??
+    getNestedNumber(bt, ['statistics', 'timings', 'largestContentfulPaint', 'renderTime', 'median']);
 
   const cls =
-    getNestedNumber(bt, ['statistics', 'pageinfo', 'cumulativeLayoutShift', 'median']) ??
-    getNestedNumber(bt, ['pageinfo', 'cumulativeLayoutShift', 'median']);
+    getNestedNumber(bt, ['googleWebVitals', 'cumulativeLayoutShift', 'median']) ??
+    getNestedNumber(bt, ['pageinfo', 'cumulativeLayoutShift', 'median']) ??
+    getNestedNumber(bt, ['statistics', 'googleWebVitals', 'cumulativeLayoutShift', 'median']) ??
+    getNestedNumber(bt, ['statistics', 'pageinfo', 'cumulativeLayoutShift', 'median']);
 
   const tbtMs =
-    getNestedNumber(bt, ['statistics', 'cpu', 'longTasks', 'totalBlockingTime', 'median']) ??
-    getNestedNumber(bt, ['cpu', 'longTasks', 'totalBlockingTime', 'median']);
+    getNestedNumber(bt, ['googleWebVitals', 'totalBlockingTime', 'median']) ??
+    getNestedNumber(bt, ['cpu', 'longTasks', 'totalBlockingTime', 'median']) ??
+    getNestedNumber(bt, ['statistics', 'googleWebVitals', 'totalBlockingTime', 'median']) ??
+    getNestedNumber(bt, ['statistics', 'cpu', 'longTasks', 'totalBlockingTime', 'median']);
 
   const ttfbMs =
-    getNestedNumber(bt, ['statistics', 'timings', 'ttfb', 'median']) ??
-    getNestedNumber(bt, ['timings', 'ttfb', 'median']);
+    getNestedNumber(bt, ['googleWebVitals', 'ttfb', 'median']) ??
+    getNestedNumber(bt, ['timings', 'ttfb', 'median']) ??
+    getNestedNumber(bt, ['statistics', 'googleWebVitals', 'ttfb', 'median']) ??
+    getNestedNumber(bt, ['statistics', 'timings', 'ttfb', 'median']);
 
   const speedIndexMs =
-    getNestedNumber(bt, ['statistics', 'visualMetrics', 'SpeedIndex', 'median']) ??
-    getNestedNumber(bt, ['visualMetrics', 'SpeedIndex', 'median']);
+    getNestedNumber(bt, ['visualMetrics', 'SpeedIndex', 'median']) ??
+    getNestedNumber(bt, ['statistics', 'visualMetrics', 'SpeedIndex', 'median']);
 
   const fullyLoadedMs =
-    getNestedNumber(bt, ['statistics', 'timings', 'fullyLoaded', 'median']) ??
-    getNestedNumber(bt, ['timings', 'fullyLoaded', 'median']);
+    getNestedNumber(bt, ['timings', 'fullyLoaded', 'median']) ??
+    getNestedNumber(bt, ['statistics', 'timings', 'fullyLoaded', 'median']);
 
   const pageSizeBytes =
     getNestedNumber(px, ['transferSize', 'median']) ??
-    getNestedNumber(px, ['statistics', 'transferSize', 'median']);
+    getNestedNumber(px, ['statistics', 'transferSize', 'median']) ??
+    getNestedNumber(px, ['total', 'transferSize', 'median']) ??
+    getNestedNumber(px, ['transferSize']);
 
   const requestsCount =
     getNestedNumber(px, ['requests', 'median']) ??
-    getNestedNumber(px, ['statistics', 'requests', 'median']);
+    getNestedNumber(px, ['statistics', 'requests', 'median']) ??
+    getNestedNumber(px, ['total', 'requests', 'median']) ??
+    getNestedNumber(px, ['requests']);
 
   const coachScore =
     getNestedNumber(coach, ['advice', 'score', 'median']) ??
