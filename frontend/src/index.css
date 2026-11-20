@@ -1,16 +1,36 @@
 @import "tailwindcss";
 
+.print-only {
+  display: none;
+}
+
 @media print {
+  @page {
+    size: A4;
+    margin: 14mm;
+  }
   body {
     background: #ffffff !important;
     color: #0f172a !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
   .no-print {
     display: none !important;
+  }
+  .print-only {
+    display: block !important;
   }
   .print-card {
     background: #ffffff !important;
     border-color: #cbd5e1 !important;
     color: #0f172a !important;
+    box-shadow: none !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .print-avoid-break {
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
 }

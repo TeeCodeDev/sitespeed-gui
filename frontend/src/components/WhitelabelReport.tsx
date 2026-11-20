@@ -3,6 +3,7 @@ import { AlertTriangle, CheckCircle2, Globe, Printer, Search, XCircle } from 'lu
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import type { TestRun } from '../api/client';
 import { getBrandingSettings } from '../pages/SettingsPage';
+import { translateCoachItem } from '../utils/coachTranslations';
 
 type Lang = 'nl' | 'en';
 type ReportTab = 'summary' | 'advice' | 'detailed' | 'domains' | 'toplist' | 'assets';
@@ -324,6 +325,13 @@ export function WhitelabelReport({ run }: { run: TestRun }) {
       {/* Executive Header */}
       <div className="print-card flex flex-wrap items-center justify-between gap-6 rounded-xl border border-slate-200 bg-white p-6 shadow-xs">
         <div className="space-y-1">
+          {branding.logoDataUrl && (
+            <img
+              src={branding.logoDataUrl}
+              alt={branding.companyName}
+              className="mb-2 h-10 max-w-[200px] object-contain"
+            />
+          )}
           <div className="text-xs font-semibold uppercase tracking-wider text-indigo-600">
             {branding.companyName} · {t.reportTitle}
           </div>
@@ -483,6 +491,40 @@ export function WhitelabelReport({ run }: { run: TestRun }) {
             </div>
           )}
 
+          {adviceList.length > 0 && (
+            <div className="print-only space-y-3 pt-4">
+              <h4 className="text-sm font-semibold text-slate-900">{t.adviceTitle}</h4>
+              {adviceList.slice(0, 12).map((item) => {
+                const tr = translateCoachItem(
+                  item.id,
+                  item.title,
+                  item.description,
+                  item.advice,
+                  lang
+                );
+                return (
+                  <div
+                    key={`print-${item.category}-${item.id}`}
+                    className="print-card rounded-lg border border-slate-200 p-3"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs font-bold text-slate-900">{tr.title}</span>
+                      <span className="text-[10px] font-semibold uppercase text-slate-500">
+                        {item.category}
+                      </span>
+                    </div>
+                    {tr.explanation && <p className="mt-1 text-xs text-slate-600">{tr.explanation}</p>}
+                    {tr.action && (
+                      <p className="mt-1 text-xs font-medium text-slate-800">
+                        <strong>{lang === 'nl' ? 'Advies:' : 'Fix:'}</strong> {tr.action}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
           {videoUrl && (
             <div className="no-print rounded-xl border border-slate-200 bg-white p-5 shadow-xs">
               <h4 className="mb-3 text-sm font-semibold text-slate-800">{t.videoTitle}</h4>
@@ -517,33 +559,72 @@ export function WhitelabelReport({ run }: { run: TestRun }) {
             </div>
           ) : (
             <div className="space-y-3">
-              {filteredAdvice.map((item) => (
-                <div key={`${item.category}-${item.id}`} className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs">
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <span className="rounded bg-indigo-50 px-2 py-0.5 text-[10px] font-semibold uppercase text-indigo-700">
-                        {item.category}
+              {filteredAdvice.map((item) => {
+                const tr = translateCoachItem(
+                  item.id,
+                  item.title,
+                  item.description,
+                  item.advice,
+                  lang
+                );
+                const impactBadge =
+                  item.score === 0
+                    ? {
+                        label: lang === 'nl' ? 'Hoog aandachtspunt' : 'High impact',
+                        cls: 'bg-rose-50 text-rose-700 border-rose-200',
+                      }
+                    : item.score < 50
+                      ? {
+                          label: lang === 'nl' ? 'Aandachtspunt' : 'Needs attention',
+                          cls: 'bg-amber-50 text-amber-700 border-amber-200',
+                        }
+                      : {
+                          label: lang === 'nl' ? 'Kleine winst' : 'Minor',
+                          cls: 'bg-slate-100 text-slate-600 border-slate-200',
+                        };
+
+                return (
+                  <div
+                    key={`${item.category}-${item.id}`}
+                    className="print-card rounded-xl border border-slate-200 bg-white p-4 shadow-xs"
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className="rounded bg-indigo-50 px-2 py-0.5 text-[10px] font-semibold uppercase text-indigo-700">
+                          {item.category}
+                        </span>
+                        <span className="text-sm font-semibold text-slate-900">{tr.title}</span>
+                      </div>
+                      <span
+                        className={`rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${impactBadge.cls}`}
+                      >
+                        {impactBadge.label}
                       </span>
-                      <span className="text-sm font-semibold text-slate-900">{item.title}</span>
                     </div>
-                    <span className="font-mono text-xs font-bold text-amber-700">{item.score}/100</span>
+                    {tr.explanation && (
+                      <p className="mt-2 text-xs text-slate-600">{tr.explanation}</p>
+                    )}
+                    {tr.action && (
+                      <p className="mt-2 rounded-lg border border-slate-200/80 bg-slate-50 p-2.5 text-xs text-slate-800">
+                        <strong>{lang === 'nl' ? 'Hoe op te lossen:' : 'How to fix:'}</strong>{' '}
+                        {tr.action}
+                      </p>
+                    )}
+                    {item.offending.length > 0 && (
+                      <div className="mt-2.5">
+                        <div className="text-[11px] font-medium text-slate-500">{t.affectedUrls}:</div>
+                        <ul className="mt-1 space-y-0.5 text-[11px] text-slate-600">
+                          {item.offending.map((u) => (
+                            <li key={u} className="truncate font-mono">
+                              • {u}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                   </div>
-                  {item.description && <p className="mt-1.5 text-xs text-slate-500">{item.description}</p>}
-                  {item.advice && <p className="mt-2 text-xs text-slate-800">{item.advice}</p>}
-                  {item.offending.length > 0 && (
-                    <div className="mt-2">
-                      <div className="text-[11px] font-medium text-slate-500">{t.affectedUrls}:</div>
-                      <ul className="mt-1 space-y-0.5 text-[11px] text-slate-600">
-                        {item.offending.map((u) => (
-                          <li key={u} className="truncate font-mono">
-                            • {u}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

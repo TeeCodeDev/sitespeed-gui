@@ -34,6 +34,13 @@ export function SharedReportPage({ token }: { token: string }) {
     <div className="mx-auto max-w-5xl space-y-6 p-6">
       <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-6 shadow-xs">
         <div>
+          {branding.logoDataUrl && (
+            <img
+              src={branding.logoDataUrl}
+              alt={branding.companyName}
+              className="mb-2 h-9 max-w-[180px] object-contain"
+            />
+          )}
           <div className="text-xs font-semibold uppercase tracking-wider text-indigo-600">
             {branding.companyName}
           </div>
