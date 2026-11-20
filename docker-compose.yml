@@ -21,7 +21,7 @@ services:
       - RESULTS_DIR=/data/results
       - DOCKER_SOCKET_PATH=/var/run/docker.sock
       - RESULTS_VOLUME_NAME=sitespeed_results
-      - SITESPEED_IMAGE=${SITESPEED_IMAGE:-sitespeedio/sitespeed.io:36.4.0}
+      - SITESPEED_IMAGE=${SITESPEED_IMAGE:-sitespeedio/sitespeed.io:latest}
       - MAX_CONCURRENT_RUNS=${MAX_CONCURRENT_RUNS:-1}
       - RUN_TIMEOUT_MS=${RUN_TIMEOUT_MS:-300000}
       - CONTAINER_MEMORY_MB=${CONTAINER_MEMORY_MB:-2048}

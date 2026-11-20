@@ -13,7 +13,7 @@ const envSchema = z.object({
 
   DOCKER_SOCKET_PATH: z.string().min(1).default('/var/run/docker.sock'),
   RESULTS_VOLUME_NAME: z.string().min(1).default('sitespeed_results'),
-  SITESPEED_IMAGE: z.string().regex(/^[a-z0-9./_-]+:[a-zA-Z0-9._-]+$/, 'Invalid Docker image tag').default('sitespeedio/sitespeed.io:36.4.0'),
+  SITESPEED_IMAGE: z.string().regex(/^[a-z0-9./_-]+:[a-zA-Z0-9._-]+$/, 'Invalid Docker image tag').default('sitespeedio/sitespeed.io:latest'),
   MAX_CONCURRENT_RUNS: z.coerce.number().int().min(1).max(10).default(1),
   RUN_TIMEOUT_MS: z.coerce.number().int().min(30_000).max(1_800_000).default(300_000),
   CONTAINER_MEMORY_MB: z.coerce.number().int().min(512).max(16384).default(2048),
